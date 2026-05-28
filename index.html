@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Les og skriv</title>
+    <link rel="icon" type="image/png" href="les_skriv_03.png">
+    <link rel="apple-touch-icon" href="les_skriv_03.png">
+
+<script src="ordliste_720.js" defer></script>
+<script src="app.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+
+<style>
+/* ==========================================================================
+   1. FONTS, VARIABLER & GLOBAL STYLING
+   ========================================================================== */
+@font-face { font-family: 'Skogstavskrift'; src: url('skogstavskrift.otf') format('opentype'); font-weight: normal; font-style: normal; }
+@font-face { font-family: 'Trykkskrift'; src: url('trykkskrift.otf') format('opentype'); font-weight: normal; font-style: normal; }
+@import url('https://fonts.googleapis.com/css2?family=Andika&display=swap');
+:root { --vokal-farge: #ffcccc; --vokal-tekst: #e74c3c; --konsonant-tekst: #2c3e50; --konsonant-overskrift: #2980b9; --alt-match: #27ae60; --sidebar-bg: #243447; --item-bg: #2c3e50; --accent-green: #27ae60; --sidebar-text: #ffffff; --main-bg: #f0f2f5; --btn-generate: var(--accent-green); --btn-reset: #ff7675; --btn-print: #2980b9; --btn-download: #9b59b6; --grid-border: #333; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; display: flex; height: 100vh; background-color: var(--main-bg); color: #333; overflow: hidden; }
+
+/* ==========================================================================
+   2. SIDEBAR, MENY-ELEMENTER & KNAPPER
+   ========================================================================== */
+.sidebar { width: 350px; min-width: 350px; background-color: var(--sidebar-bg); color: var(--sidebar-text); padding: 15px 15px 2px 15px; box-sizing: border-box; display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.3); z-index: 10; overflow-y: auto; max-height: 100vh; }
+.sidebar h2 { margin: 0 0 15px 0; font-size: 1.1rem; text-align: center; text-transform: uppercase; }
+.control-item { display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 8px; margin-bottom: 6px; font-size: 0.9rem; }
+select, input[type="number"] { background: #ecf0f1; border: none; border-radius: 4px; padding: 5px; font-size: 0.8rem; width: 160px; }
+textarea { width: 100%; height: 95px; padding: 10px; border-radius: 6px; border: none; font-family: inherit; font-size: 0.9rem; box-sizing: border-box; margin-bottom: 15px; background-color: #ecf0f1; resize: none; }
+.switch { position: relative; display: inline-block; width: 40px; height: 20px; flex-shrink: 0; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
+.slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .slider { background-color: var(--accent-green); }
+input:checked + .slider:before { transform: translateX(20px); }
+.action-btn { width: 100%; padding: 10px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; margin-bottom: 0; color: white; transition: 0.2s; box-sizing: border-box; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; }
+.action-btn:hover { filter: brightness(1.2); transform: translateY(-2px); }
+.btn-row { display: flex; gap: 10px; margin-top: 2px; }
+.btn-generate { background-color: var(--btn-generate); }
+.btn-reset { background-color: var(--btn-reset); }
+.btn-print { background-color: var(--btn-print); }
+.btn-download { background-color: var(--btn-download); }
+
+/* ==========================================================================
+   3. HAMBURGERMENY & DROPDOWN
+   ========================================================================== */
+.menu-container { position: relative; margin-bottom: 10px; }
+.hamburger { display: flex; flex-direction: column; gap: 4px; cursor: pointer; width: 20px; padding: 5px; }
+.hamburger span { display: block; width: 100%; height: 2px; background-color: white; border-radius: 1px; transition: 0.3s; }
+.menu-item-disabled { opacity: 0.4; filter: grayscale(100%); pointer-events: none; cursor: default; }
+.dropdown-menu { display: none; position: absolute; top: 25px; left: 0; background-color: #2c3e50; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; width: 200px; z-index: 100; box-shadow: 5px 5px 15px rgba(0,0,0,0.5); }
+.dropdown-menu.show { display: block; }
+.dropdown-menu a { display: block; color: white; padding: 12px 15px; text-decoration: none; font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.dropdown-menu a:hover { background-color: #34495e; }
+.menu-icon { width: 20px; height: 20px; margin-right: 10px; vertical-align: middle; object-fit: contain; border-radius: 3px; }
+
+/* ==========================================================================
+   4. EGEN OVERSKRIFT (SPESIFIKK RAD-STYLING)
+   ========================================================================== */
+.menu-item.overskrift-rad { display: flex !important; align-items: center !important; justify-content: space-between !important; background: rgba(0,0,0,0.2) !important; padding: 10px 12px !important; border-radius: 8px !important; margin-bottom: 6px !important; box-sizing: border-box !important; }
+.menu-item.overskrift-rad label { color: var(--sidebar-text) !important; font-size: 0.9rem !important; font-weight: normal !important; white-space: nowrap !important; margin: 0 !important; }
+.menu-item.overskrift-rad input[type="text"] { width: 160px !important; height: 28px !important; padding: 3px 8px !important; font-size: 0.8rem !important; font-family: inherit !important; box-sizing: border-box !important; border-radius: 4px !important; background-color: #ffffff !important; color: #2c3e50 !important; border: none !important; }
+.menu-item.overskrift-rad input[type="text"]::placeholder { color: #94a3b8 !important; opacity: 1 !important; }
+
+/* ==========================================================================
+   5. MANUELLE ORDGRUPPEBOKSER
+   ========================================================================== */
+.ord-gruppe-boks { border: 2px dashed #cbd5e0; border-radius: 6px; padding: 12px; margin-bottom: 15px; background-color: #ffffff; transition: background-color 0.3s ease, border-color 0.3s ease; }
+.ord-gruppe-boks h4 { margin: 0 0 8px 0; font-size: 0.9rem; color: #4a5568; text-transform: uppercase; letter-spacing: 0.5px; }
+.ord-gruppe-boks ul { list-style: none; padding: 0; margin: 0; }
+.ord-gruppe-boks.mangler-ord { background-color: #fff5f5 !important; border-color: #feb2b2 !important; }
+.ord-gruppe-boks.full-ord { background-color: #f0fff4 !important; border-color: #9ae6b4 !important; }
+
+/* ==========================================================================
+   6. HOVEDOMRÅDE & SKALERING AV FORHÅNDSVISNING
+   ========================================================================== */
+.main-content { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 40px 20px 20px 20px; height: 100vh; box-sizing: border-box; }
+.ark-skalering { display: flex; align-items: center; justify-content: center; transform: scale(0.75); transform-origin: center top; }
+@media (max-height: 850px) { .ark-skalering { transform: scale(0.65); } }
+@media (max-height: 720px) { .ark-skalering { transform: scale(0.52); } }
+
+/* ==========================================================================
+   7. A4 ARKET & INNHOLD PÅ ARKET (PRINT & FORHÅNDSVISNING)
+   ========================================================================== */
+#capture-area { position: relative; background: white; padding: 12mm 18mm; padding-top: 65px !important; width: 210mm; height: 297mm; min-width: 210mm; min-height: 297mm; box-shadow: 0 10px 30px rgba(0,0,0,0.15); box-sizing: border-box; overflow: hidden; }
+#capture-area::before { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-size: 1.6rem; letter-spacing: 12px; white-space: nowrap; z-index: 3; }
+#capture-area::after { position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); font-size: 16rem; opacity: 0.04; pointer-events: none; z-index: -1; white-space: nowrap; }
+#main-title, .lese-grid, .skrive-grid, #setningerBeholder, .instruksjon { position: relative; z-index: 2; }
+
+/* --- VANNMERKE-INNHOLD FOR HVERT TEMA (Valgfritt å beholde i bakgrunnen) --- */
+.theme-standard::after { content: ""; }
+.theme-host::after { content: "🍁"; }
+.theme-vinter::after { content: "☃️"; }
+.theme-var::after { content: "🦋"; }
+.theme-rommet::after { content: "🪐"; }
+.theme-fest::after { content: "🎉"; }
+.theme-esc::after { content: "🎶"; }
+.theme-halloween::after { content: "👻"; }
+.theme-jul::after { content: "🎁"; }
+.theme-dino::after { content: "🦖"; }
+.theme-pirat::after { content: "⚓️"; }
+.theme-sport::after { content: "🏆"; }
+.theme-realfag::after { content: "🧪"; }
+
+#main-title { font-size: 2.2rem; color: #333; text-align: center; margin-top: 0; margin-bottom: 30px; text-transform: none; letter-spacing: 2px; }
+.instruksjon { font-size: 1.6rem; font-weight: bold; margin-top: 35px; margin-bottom: 15px; text-decoration: underline; }
+.ord-tabell { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
+.ord-tabell td { border: 2px solid var(--grid-border); text-align: center; padding: 15px; font-size: 2.2rem; width: 33.33%; }
+.lese-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin-bottom: 20px; }
+.lese-grid div { border: 2px solid var(--grid-border); text-align: center; padding: 12px; font-size: 2.1rem; background: #fff; }
+.lese-grid.smal div { padding: 6px; font-size: 1.8rem; }
+.skrive-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px 40px; width: 100%; margin-bottom: 25px; }
+.lines-container { width: 100%; max-width: 220px; margin: -20px auto 2px auto; display: inline-block; }
+.l { border-bottom: 1px solid #ccc; height: 26px; width: 100%; }
+.l.thick { border-bottom: 3px solid #333; }
+.setning-linje { display: flex; align-items: flex-end; justify-content: space-between; font-size: 1.6rem; margin-bottom: 18px; line-height: 1.3; }
+.setning-tekst { flex-grow: 1; display: flex; align-items: flex-end; flex-wrap: wrap; white-space: pre-wrap; }
+.setning-tekst span.linje-blank + font { white-space: pre-wrap; }
+.linje-blank { display: inline-block; width: 180px; border-bottom: 2px solid #000; margin: 0 10px; height: 10px; vertical-align: middle; margin-bottom: 4px; white-space: nowrap; }
+.fasit-ord { width: 120px; text-align: right; font-weight: normal; }
+
+/* ==========================================================================
+   8. MODAL-STYLING (MANUELT ORDVALG)
+   ========================================================================== */
+.modal-skall { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
+.modal-innhold { background-color: #fff; padding: 20px; border-radius: 8px; width: 85%; max-width: 900px; height: 80vh; display: flex; flex-direction: column; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+.modal-hode { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
+.modal-lukk { font-size: 28px; font-weight: bold; cursor: pointer; color: #718096; }
+.modal-lukk:hover { color: #000; }
+.modal-body { display: flex; flex: 1; overflow: hidden; margin-top: 15px; gap: 20px; }
+.modal-venstre { width: 30%; border-right: 2px solid #edf2f7; padding-right: 15px; display: flex; flex-direction: column; }
+.modal-venstre ul { list-style: none; padding: 0; margin-top: 10px; overflow-y: auto; flex: 1; }
+.modal-venstre li { background: #edf2f7; padding: 10px; margin-bottom: 8px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+.modal-fjern-btn { background: #e53e3e; color: white; border: none; border-radius: 3px; padding: 2px 8px; cursor: pointer; }
+.modal-hoyre { width: 70%; display: flex; flex-direction: column; }
+#søkOrdInput { width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 4px; margin-bottom: 15px; font-size: 1rem; }
+.ord-velger-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; overflow-y: auto; flex: 1; padding-bottom: 10px; }
+.ord-knapp { background: #f7fafc; border: 1px solid #cbd5e0; border-radius: 4px; padding: 12px; text-align: center; cursor: pointer; font-size: 1.1rem; font-weight: 500; transition: all 0.2s; }
+.ord-knapp:hover { background: #e2e8f0; border-color: #4a5568; }
+.ord-knapp.valgt { background: #48bb78; color: white; border-color: #38a169; }
+.ord-knapp.deaktivert { opacity: 0.5; cursor: not-allowed; }
+.modal-bunn { border-top: 1px solid #e2e8f0; padding-top: 15px; display: flex; justify-content: flex-end; gap: 10px; }
+.btn-danger { background-color: #e53e3e; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+.btn-danger:hover { background-color: #c53030; }
+
+/* ==========================================================================
+   8. TEMA-STILER (RAMMER & FARGER FOR HVERT ENKELT TEMA)
+   ========================================================================== */
+/* --- DE FIRE ORIGINALE TEMAENE --- */
+.tema-standard { background-color: #ffffff; border: 4px solid #333; }
+.tema-standard #main-title { color: #2b6cb0; }
+.tema-standard .lese-grid div { background: #f7fafc; border: 2px solid #cbd5e0; color: #2d3748; }
+.tema-standard .lines-container .l.thick { border-color: #4a5568 !important; }
+
+.tema-skog { background-color: #f0fff4; border: 5px solid #2f855a; }
+.tema-skog #main-title { color: #2f855a; }
+.tema-skog .lese-grid div { background: #ffffff; border: 2px solid #9ae6b4; color: #22543d; border-radius: 8px; }
+.tema-skog .lines-container .l.thick { border-color: #2f855a !important; }
+
+.tema-sol { background-color: #fffaf0; border: 5px solid #dd6b20; }
+.tema-sol #main-title { color: #dd6b20; }
+.tema-sol .lese-grid div { background: #ffffff; border: 2px solid #fbd38d; color: #7b341e; border-radius: 4px; }
+.tema-sol .lines-container .l.thick { border-color: #dd6b20 !important; }
+
+.tema-minimal { background-color: #ffffff; border: 2px solid #000000; }
+.tema-minimal #main-title { color: #000000; text-transform: uppercase; }
+.tema-minimal .lese-grid div { background: #ffffff; border: 1px solid #000000; color: #000000; border-radius: 0px; box-shadow: none; }
+.tema-minimal .lines-container .l.thick { border-color: #000000 !important; }
+
+/* --- DE NYERE BILDETEMAENE --- */
+.theme-standard { background-color: #ffffff; border: 4px solid #333; }
+.theme-standard #main-title { color: #333; }
+.theme-standard .lese-grid div { background: #f7fafc; border: 2px solid #cbd5e0; }
+
+.theme-host { background-color: #fffaf0; border: 6px double #d35400; }
+.theme-host #main-title { color: #d35400; }
+.theme-host .lese-grid div { background: #ffffff; border: 2px solid #e67e22; }
+.theme-host .lines-container .l.thick { border-color: #d35400 !important; }
+
+.theme-vinter { background-color: #f4f9ff; border: 4px dashed #3498db; }
+.theme-vinter #main-title { color: #2980b9; }
+.theme-vinter .lese-grid div { background: #ffffff; border: 2px solid #3498db; }
+.theme-vinter .lines-container .l.thick { border-color: #2980b9 !important; }
+
+.theme-var { background-color: #fafffa; border: 5px solid #2ecc71; }
+.theme-var #main-title { color: #27ae60; }
+.theme-var .lese-grid div { background: #ffffff; border: 2px solid #2ecc71; }
+.theme-var .lines-container .l.thick { border-color: #27ae60 !important; }
+
+.theme-sommer { background-color: #fffdf0; border: 5px solid #f1c40f; }
+.theme-sommer #main-title { color: #f39c12; }
+.theme-sommer .lese-grid div { background: #ffffff; border: 2px solid #f1c40f; }
+.theme-sommer .lines-container .l.thick { border-color: #f39c12 !important; }
+
+.theme-rommet { background-color: #f9f9fc; border: 5px solid #9b59b6; }
+.theme-rommet #main-title { color: #8e44ad; }
+.theme-rommet .lese-grid div { background: #ffffff; border: 2px solid #9b59b6; }
+.theme-rommet .lines-container .l.thick { border-color: #8e44ad !important; }
+
+.theme-fest { background-color: #fff9fe; border: 5px dotted #e91e63; }
+.theme-fest #main-title { color: #ff4081; }
+.theme-fest .lese-grid div { background: #ffffff; border: 2px solid #e91e63; }
+.theme-fest .lines-container .l.thick { border-color: #ff4081 !important; }
+
+.theme-esc { background-color: #fff9ff; border: 5px solid #ff007f; }
+.theme-esc #main-title { color: #673ab7; }
+.theme-esc .lese-grid div { background: #ffffff; border: 2px solid #ff007f; }
+.theme-esc .lines-container .l.thick { border-color: #ff007f !important; }
+
+.theme-halloween { background-color: #fcf6f0; border: 5px solid #333; }
+.theme-halloween #main-title { color: #d35400; }
+.theme-halloween .lese-grid div { background: #ffffff; border: 2px solid #333; }
+.theme-halloween .lines-container .l.thick { border-color: #d35400 !important; }
+
+.theme-jul { background-color: #fffbfb; border: 5px dashed #c0392b; }
+.theme-jul #main-title { color: #c0392b; }
+.theme-jul .lese-grid div { background: #ffffff; border: 2px solid #27ae60; }
+.theme-jul .lines-container .l.thick { border-color: #c0392b !important; }
+
+.theme-dino { background-color: #fcfdf5; border: 5px solid #795548; }
+.theme-dino #main-title { color: #5d4037; }
+.theme-dino .lese-grid div { background: #ffffff; border: 2px solid #8d6e63; }
+.theme-dino .lines-container .l.thick { border-color: #5d4037 !important; }
+
+.theme-pirat { background-color: #fbfbfc; border: 6px double #34495e; }
+.theme-pirat #main-title { color: #2c3e50; }
+.theme-pirat .lese-grid div { background: #ffffff; border: 2px solid #34495e; }
+.theme-pirat .lines-container .l.thick { border-color: #2c3e50 !important; }
+
+.theme-sport { background-color: #f7fcf7; border: 5px solid #27ae60; }
+.theme-sport #main-title { color: #27ae60; }
+.theme-sport .lese-grid div { background: #ffffff; border: 2px solid #2ecc71; }
+.theme-sport .lines-container .l.thick { border-color: #27ae60 !important; }
+
+.theme-realfag { background-color: #fcfdfd; border: 4px solid #16a085; }
+.theme-realfag #main-title { color: #16a085; }
+.theme-realfag .lese-grid div { background: #ffffff; border: 2px solid #2980b9; }
+.theme-realfag .lines-container .l.thick { border-color: #16a085 !important; }
+
+/* ==========================================================================
+   TEMA BILDER-INTEGRASJON (Plassering og bildestier for alle 3 bildene)
+   ========================================================================== */
+.theme-image { position: absolute; width: 110px; height: 110px; background-size: contain; background-repeat: no-repeat; background-position: center; opacity: 0.95; z-index: 5; transition: all 0.3s ease; display: none; }
+
+#theme-img-1 { top: 25px; left: 20px; display: none; }       
+#theme-img-2 { top: 25px; right: 20px; display: none; }      
+#theme-img-3 { bottom: 25px; right: 20px; display: none; }    
+
+/* Aktiverer visning for alle bildebaserte temaer */
+.theme-dino #theme-img-1, .theme-dino #theme-img-2, .theme-dino #theme-img-3,
+.theme-esc #theme-img-1, .theme-esc #theme-img-2, .theme-esc #theme-img-3,
+.theme-fest #theme-img-1, .theme-fest #theme-img-2, .theme-fest #theme-img-3,
+.theme-halloween #theme-img-1, .theme-halloween #theme-img-2, .theme-halloween #theme-img-3,
+.theme-host #theme-img-1, .theme-host #theme-img-2, .theme-host #theme-img-3,
+.theme-jul #theme-img-1, .theme-jul #theme-img-2, .theme-jul #theme-img-3,
+.theme-realfag #theme-img-1, .theme-realfag #theme-img-2, .theme-realfag #theme-img-3,
+.theme-pirat #theme-img-1, .theme-pirat #theme-img-2, .theme-pirat #theme-img-3,
+.theme-sommer #theme-img-1, .theme-sommer #theme-img-2, .theme-sommer #theme-img-3,
+.theme-sport #theme-img-1, .theme-sport #theme-img-2, .theme-sport #theme-img-3,
+.theme-rommet #theme-img-1, .theme-rommet #theme-img-2, .theme-rommet #theme-img-3,
+.theme-vinter #theme-img-1, .theme-vinter #theme-img-2, .theme-vinter #theme-img-3 { display: block; }
+
+/* 1. DINOSAUR */
+.theme-dino #theme-img-1 { background-image: url('Bilder/dinosaur_01.png'); }
+.theme-dino #theme-img-2 { background-image: url('Bilder/dinosaur_02.png'); }
+.theme-dino #theme-img-3 { background-image: url('Bilder/dinosaur_03.png'); }
+
+/* 2. EUROVISJON */
+.theme-esc #theme-img-1 { background-image: url('Bilder/eurovisjon_01.png'); }
+.theme-esc #theme-img-2 { background-image: url('Bilder/eurovisjon_02.png'); }
+.theme-esc #theme-img-3 { background-image: url('Bilder/eurovisjon_03.png'); }
+
+/* 3. FEST */
+.theme-fest #theme-img-1 { background-image: url('Bilder/fest_01.png'); }
+.theme-fest #theme-img-2 { background-image: url('Bilder/fest_02.png'); }
+.theme-fest #theme-img-3 { background-image: url('Bilder/fest_03.png'); }
+
+/* 4. HALLOWEEN */
+.theme-halloween #theme-img-1 { background-image: url('Bilder/halloween_01.png'); }
+.theme-halloween #theme-img-2 { background-image: url('Bilder/halloween_02.png'); }
+.theme-halloween #theme-img-3 { background-image: url('Bilder/halloween_03.png'); }
+
+/* 5. HØST */
+.theme-host #theme-img-1 { background-image: url('Bilder/host_01.png'); }
+.theme-host #theme-img-2 { background-image: url('Bilder/host_02.png'); }
+.theme-host #theme-img-3 { background-image: url('Bilder/host_03.png'); }
+
+/* 6. JUL */
+.theme-jul #theme-img-1 { background-image: url('Bilder/jul_01.png'); }
+.theme-jul #theme-img-2 { background-image: url('Bilder/jul_02.png'); }
+.theme-jul #theme-img-3 { background-image: url('Bilder/jul_03.png'); }
+
+/* 7. NATURFAG / REALFAG */
+.theme-realfag #theme-img-1 { background-image: url('Bilder/naturfag_01.png'); }
+.theme-realfag #theme-img-2 { background-image: url('Bilder/naturfag_02.png'); }
+.theme-realfag #theme-img-3 { background-image: url('Bilder/naturfag_03.png'); }
+
+/* 8. SJØRØVER */
+.theme-pirat #theme-img-1 { background-image: url('Bilder/sjorover_01.png'); }
+.theme-pirat #theme-img-2 { background-image: url('Bilder/sjorover_02.png'); }
+.theme-pirat #theme-img-3 { background-image: url('Bilder/sjorover_03.png'); }
+
+/* 9. SOMMER */
+.theme-sommer #theme-img-1 { background-image: url('Bilder/sommer_01.png'); }
+.theme-sommer #theme-img-2 { background-image: url('Bilder/sommer_02.png'); }
+.theme-sommer #theme-img-3 { background-image: url('Bilder/sommer_03.png'); }
+
+/* 10. SPORT */
+.theme-sport #theme-img-1 { background-image: url('Bilder/sport_01.png'); }
+.theme-sport #theme-img-2 { background-image: url('Bilder/sport_02.png'); }
+.theme-sport #theme-img-3 { background-image: url('Bilder/sport_03.png'); }
+
+/* 11. VERDENSROMMET */
+.theme-rommet #theme-img-1 { background-image: url('Bilder/verdensrommet_01.png'); }
+.theme-rommet #theme-img-2 { background-image: url('Bilder/verdensrommet_02.png'); }
+.theme-rommet #theme-img-3 { background-image: url('Bilder/verdensrommet_03.png'); }
+
+/* 12. VINTER */
+.theme-vinter #theme-img-1 { background-image: url('Bilder/vinter_01.png'); }
+.theme-vinter #theme-img-2 { background-image: url('Bilder/vinter_02.png'); }
+.theme-vinter #theme-img-3 { background-image: url('Bilder/vinter_03.png'); }
+
+
+/* ==========================================================================
+   9. STRICT PRINT-STYLING (RENE A4 REGLER FOR UTSKRIFT)
+   ========================================================================== */
+/* ==========================================================================
+   9. STRICT PRINT-STYLING (RENE A4 REGLER FOR UTSKRIFT)
+   ========================================================================== */
+@media print { 
+  @page { 
+    size: A4 portrait; 
+    margin: 0; 
+  } 
+  
+  html, body { 
+    width: 210mm; 
+    height: 297mm; 
+    background: white !important; 
+    overflow: visible !important; 
+  } 
+  
+  .sidebar { 
+    display: none !important; 
+  } 
+  
+  .main-content { 
+    padding: 0 !important; 
+    height: auto !important; 
+    width: 210mm !important; 
+    display: block !important; 
+    overflow: visible !important; 
+  } 
+  
+  /* Krymper hele arket med 4% under utskrift så rammene ikke kuttes */
+  .ark-skalering { 
+    display: block !important; 
+    width: 210mm !important; 
+    height: 297mm !important; 
+    transform: scale(0.96) !important; 
+    transform-origin: center center !important; 
+  } 
+  
+  #capture-area { 
+    box-shadow: none !important; 
+    padding: 12mm 18mm !important; 
+    width: 210mm !important; 
+    height: 297mm !important; 
+    margin: 0 auto !important; 
+    float: none !important; 
+    -webkit-print-color-adjust: exact !important; 
+    print-color-adjust: exact !important; 
+  } 
+  
+  .ord-tabell td, .linje-blank, .l.thick { 
+    border-color: #000 !important; 
+  } 
+  
+  .l { 
+    border-color: #ccc !important; 
+  } 
+}
+</style>   
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sidebar-header" style="display: flex; align-items: center; margin-bottom: 20px;">
+        <div class="menu-container" style="margin-bottom: 0; margin-right: 15px;">
+            <div class="hamburger" id="hamburgerBtn">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <div id="myDropdown" class="dropdown-menu">
+                <a href="https://77tor.github.io/bingo/" target="_self">
+                    <img src="bingo_02.png" class="menu-icon"> Bingo
+                </a>
+                <a href="https://77tor.github.io/gitter/" target="_self">
+                    <img src="gitter_02.png" class="menu-icon"> Gitter-ord
+                </a>
+                <a href="#" target="_self" class="menu-item-disabled">
+                    <img src="les_skriv_03.png" class="menu-icon"> Les og skriv
+                </a>
+                <a href="https://77tor.github.io/ord-sok/" target="_self">
+                    <img src="ord-sok.png" class="menu-icon"> Ordsøk
+                </a>
+                <a href="https://77tor.github.io/Silhuettord/" target="_self">
+                    <img src="silhuett-ord_05.png" class="menu-icon"> Silhuett-ord
+                </a>
+                <a href="https://77tor.github.io/Stavelser/" target="_self">
+                    <img src="stavelser_01.png" class="menu-icon"> Stavelser
+                </a>
+
+            </div>
+        </div>
+        <h2 style="margin: 0; flex-grow: 1; text-align: center;">Les og skriv</h2>
+    </div>
+
+    <div class="sidebar-controls">
+        <div class="control-item">
+            <span>Hovedområde</span>
+<select id="bolkVelger">
+    <option value="manuell_alle"> Velg blant alle ord</option>
+    <option value="bolk1">1 – Diftonger</option>
+    <option value="bolk2">2 – Dobbel konsonant</option>
+    <option value="bolk3">3 – Å-lyd</option>
+    <option value="bolk4">4 – Konsonantlyder</option>
+    <option value="bolk5">5 – Blandede lyder og forvekslinger</option>
+    <option value="bolk6">6 – Stumme bokstaver</option>
+    <option value="bolk7">7 – Par-ord</option>
+    <option value="bolk8">8 – Småord og kort o-lyd</option>
+    <option value="bolk9">9 – Lydrette ord</option>
+    <option value="bolk10">10 – De 96 mest brukte ord</option>
+    <option value="manuell_kategori">Velg ord selv</option>
+</select>
+        </div>
+
+        <div class="control-item">
+            <span>Velg liste</span>
+            <select id="kategoriVelger">
+                </select>
+        </div>
+
+<div class="control-item">
+    <label for="antallOrdVelger">Antall ord:</label>
+    <select id="antallOrdVelger" style="width: 100px;">
+        <option value="3" selected>3 ord</option>
+        <option value="6">6 ord</option>
+    </select>
+</div>
+        <div class="control-item">
+            <span>Font</span>
+            <select id="font-family">
+                <option value="'Trykkskrift', sans-serif">Trykkskrift</option>
+                <option value="'Skogstavskrift', cursive">Skogstavskrift</option>
+                <option value="'Andika', sans-serif">Andika</option>
+                <option value="'Courier New', Courier, monospace">Monospace</option>
+                <option value="'Comic Sans MS', cursive">Comic Sans</option>
+                <option value="Arial, sans-serif">Arial</option>
+            </select>
+        </div>
+<div class="control-item">
+    <label for="tekstStorrelseVelger">Skriftstørrelse:</label>
+    <select id="tekstStorrelseVelger" style="width: 100px;">
+        <option value="liten">Liten</option>
+        <option value="normal" selected>Normal</option>
+        <option value="stor">Stor</option>
+    </select>
+</div>
+        <div class="control-item">
+            <span>STORE bokstaver</span>
+            <label class="switch">
+                <input type="checkbox" id="toggle-case">
+                <span class="slider"></span>
+            </label>
+        </div>
+<div class="menu-item overskrift-rad">
+    <label for="overskriftInput">Egen overskrift:</label>
+    <input type="text" id="overskriftInput" placeholder="Automatisk...">
+</div>
+    </div>
+
+<div class="control-item">
+    <span>Visuelt tema</span>
+    <select id="temaVelger">
+        <option value="tema-standard">Standard (Blå/Grå)</option>
+        <option value="tema-skog">Skog og Natur (Grønn)</option>
+        <option value="tema-sol">Solskinn (Gul/Oransje)</option>
+        <option value="tema-minimal">Minimalistisk (Svart/Hvit)</option>
+        <option value="theme-host">🍂 Høst</option>
+        <option value="theme-vinter">❄️ Vinter</option>
+        <option value="theme-sommer">🌸 Sommer</option>
+        <option value="theme-rommet">🚀 Verdensrommet</option>
+        <option value="theme-fest">🎈 Fest / Bursdag</option>
+        <option value="theme-esc">🎤 Eurovision</option>
+        <option value="theme-halloween">🎃 Halloween</option>
+        <option value="theme-jul">🎄 Jul</option>
+        <option value="theme-dino">🦖 Dinosaurer</option>
+        <option value="theme-pirat">🏴‍☠️ Sjørøvere</option>
+        <option value="theme-sport">⚽️ Sport / Aktivitet</option>
+        <option value="theme-realfag">🧬 Realfag</option>
+    </select>
+</div>
+
+<div style="margin-top: 15px;">
+        <div class="main-row" style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <button class="action-btn btn-generate" id="btnLagOppgave" style="flex: 2; white-space: nowrap;">LAG OPPGAVE</button>
+            <button class="action-btn btn-reset" id="btnNullstill" style="flex: 1; white-space: nowrap;">NULLSTILL</button>
+        </div>
+        <div class="btn-row" style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <button class="action-btn btn-print" id="btnSkrivUt" style="flex: 1;">SKRIV UT</button>
+            <button class="action-btn btn-download" id="btnLastNed" style="display: none;"></button>
+        </div>
+    </div>
+</div>
+
+<div class="main-content">
+    <div class="ark-skalering">
+
+        <div id="placeholder-image" style="display: flex; justify-content: center; align-items: center; width: 100%; height: 100%;">
+            <img src="les_skriv.png" alt="Velkomstbilde" style="max-width: 700px; width: 90%; opacity: 0.3; filter: grayscale(100%);">
+        </div> 
+
+<div id="capture-area" style="display: none;">
+<div id="theme-img-1" class="theme-image"></div>
+    <div id="theme-img-2" class="theme-image"></div>
+    <div id="theme-img-3" class="theme-image"></div>
+
+    <h1 id="main-title">Oppgaver til ordtrening</h1>
+    
+    <div class="instruksjon">Les ordene:</div>
+    <div id="leseOrdBeholder"></div>
+
+    <div class="instruksjon">Skriv ordene:</div>
+    <div id="skriveLinjerBeholder"></div>
+
+    <div class="instruksjon">Les og skriv ordene på rett plass:</div>
+    <div id="setningerBeholder"></div>
+</div>
+
+    </div>
+</div>
+<div id="ordVelgerModal" class="modal-skall" style="display: none; align-items: flex-start !important; padding-top: 1vh;">
+    
+    <div class="modal-innhold" style="height: 94vh !important; max-height: 94vh; display: flex; flex-direction: column; margin-top: 0; padding-top: 5 !important; padding-bottom: 0 !important;">
+        
+        <div class="modal-hode" style="padding: 4px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0;">
+            <h2 style="margin: 0; font-size: 1.2rem;">Velg ord til oppgaven</h2>
+            <span class="modal-lukk" id="btnAvbrytKryss" style="cursor: pointer; font-size: 1.5rem; line-height: 1;">&times;</span>
+        </div>
+        
+        <div class="modal-filter-seksjon" style="display: flex; gap: 15px; align-items: flex-end; background: #f7fafc; padding: 6px 20px; border-bottom: 1px solid #e2e8f0; box-sizing: border-box;">
+            <div style="flex: 1;">
+                <label for="modalBolkVelger" style="display:block; font-size: 0.75rem; margin-bottom:2px; font-weight:bold; color: #4a5568;">Hovedområde:</label>
+                <select id="modalBolkVelger" style="width:100%; padding:5px; border-radius:4px; border:1px solid #cbd5e0; background: white; font-size: 0.9rem; box-sizing: border-box;"></select>
+            </div>
+
+            <div style="flex: 1;">
+                <label for="modalKategoriVelger" style="display:block; font-size: 0.75rem; margin-bottom:2px; font-weight:bold; color: #4a5568;">Velg liste:</label>
+                <select id="modalKategoriVelger" style="width:100%; padding:5px; border-radius:4px; border:1px solid #cbd5e0; background: white; font-size: 0.9rem; box-sizing: border-box;"></select>
+            </div>
+        </div>
+
+        <div class="modal-body" style="display: flex; gap: 20px; padding: 10px 20px; flex: 1; min-height: 0;">
+            
+            <div class="modal-venstre" style="flex: 1; display: flex; flex-direction: column; height: 100%;">
+                <h3 style="margin-top: 0; margin-bottom: 5px; font-size: 1rem;">Valgte ord (<span id="tellerValgte">0</span>/<span id="tellerMaks">3</span>)</h3>
+                
+                <div id="boksGruppe1" class="ord-gruppe-boks" style="padding: 8px; margin-bottom: 0; flex: 1; overflow-y: auto; box-sizing: border-box;">
+                    <h4 style="margin-top: 0; margin-bottom: 5px; font-size: 0.85rem; color: #718096;">Ord 1–6:</h4>
+                    <ul id="valgteOrdListe1" style="list-style: none; padding: 0; margin: 0;"></ul>
+                    <ul id="valgteOrdListe2" style="list-style: none; padding: 0; margin: 0;"></ul>
+                </div>
+            </div>
+            
+            <div class="modal-hoyre" style="flex: 1.4; display: flex; flex-direction: column; height: 100%;">
+                <input type="text" id="søkOrdInput" placeholder="Søk etter ord i denne kategorien..." style="width: 100%; padding: 6px; margin-bottom: 8px; box-sizing: border-box; font-size: 0.9rem;">
+                <div id="alleOrdContainer" class="ord-velger-grid" style="flex: 1; overflow-y: auto; padding-right: 5px;"></div>
+            </div>
+        </div>
+        
+        <div class="modal-bunn" style="padding: 6px 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 0; background: white;">
+            <button id="btnGenererValgte" class="btn-primary" disabled style="padding: 6px 12px; font-size: 0.9rem;">Generer side</button>
+            <button id="btnNullstillValgte" class="btn-danger" style="padding: 6px 12px; font-size: 0.9rem;">Nullstill valg</button>
+            <button id="btnAvbryt" class="btn-secondary" style="padding: 6px 12px; font-size: 0.9rem;">Avbryt</button>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
