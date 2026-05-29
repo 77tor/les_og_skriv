@@ -30,7 +30,6 @@ function oppdaterKategoriMeny() {
     if (valgtBolkNøkkel === 'manuell_alle') {
         kategoriVelger.style.display = 'none'; // Skjul underkategori
         
-        // --- NYTT: Oppdaterer placeholder til "Blandede ord..." ---
         if (typeof overskriftInput !== 'undefined' && overskriftInput) {
             overskriftInput.placeholder = "Blandede ord...";
         }
@@ -44,9 +43,6 @@ function oppdaterKategoriMeny() {
 
     // 2. Logikk for "Velg ord selv"
     if (valgtBolkNøkkel === 'manuell_kategori') {
-        // --- ENDRING HER: Siden vi åpner en manuell velger som støtter opptil 6 ord, 
-        // lar vi enten menyen styre det, eller så kan vi synkronisere den.
-        // For å sikre at du kan velge 6 ord, henter vi bare verdien direkte i åpneManuellVelger.
         åpneManuellVelger();
         return; 
     }
@@ -66,7 +62,6 @@ function oppdaterKategoriMeny() {
         });
     }
 
-    // --- NYTT: Oppdaterer placeholder til å vise gjeldende kategorinavn ---
     if (typeof overskriftInput !== 'undefined' && overskriftInput) {
         const valgtKategoriNøkkel = kategoriVelger.value;
         overskriftInput.placeholder = valgtKategoriNøkkel ? `${valgtKategoriNøkkel}...` : "Automatisk...";
@@ -74,7 +69,6 @@ function oppdaterKategoriMeny() {
 
     autoGenerate();
 }
-
 
 function autoGenerate() {
     if (document.getElementById('capture-area').style.display === 'block') {
@@ -87,8 +81,8 @@ function shuffle(array) {
 }
 
 function generatePuzzle() {
-    // Hvis brukeren står på "Velg ord selv" men klikker på sidemenyknappen, åpner vi modalen igjen.
-    if (bolkVelger.value === 'manuell_kategori') {
+    // Hvis brukeren står på "Velg ord selv" men klikker på sidemenyknappen uten ord valgt, åpner vi modalen.
+    if (bolkVelger.value === 'manuell_kategori' && manueltValgteOrd.length === 0) {
         åpneManuellVelger();
         return;
     }
@@ -102,12 +96,9 @@ function generatePuzzle() {
     let antallOrd = parseInt(antallOrdVelger.value, 10);
 
     let aktivListe = [];
-
-    // --- NYTT: Sjekk om det er Par-ord som er valgt ---
     const erParOrd = (valgtBolkNøkkel === 'bolk7' && valgtKategoriNøkkel === 'Par-ord');
 
     if (erParOrd) {
-        // Tving visningen til 6 ord (3 par) og oppdater dropdown i menyen
         antallOrd = 6;
         antallOrdVelger.value = 6;
     }
@@ -115,9 +106,16 @@ function generatePuzzle() {
     if (valgtBolkNøkkel === 'manuell_alle') {
         Object.keys(ordlisteKategorier).forEach(bolkKey => {
             Object.keys(ordlisteKategorier[bolkKey]).forEach(katKey => {
-                aktivListe = aktivListe.concat(ordlisteKategorier[bolkKey][katKey]);
+                if (bolkKey === 'bolk7' && katKey === 'Par-ord') {
+                    ordlisteKategorier[bolkKey][katKey].forEach(par => {
+                        aktivListe = aktivListe.concat(par);
+                    });
+                } else {
+                    aktivListe = aktivListe.concat(ordlisteKategorier[bolkKey][katKey]);
+                }
             });
         });
+        
         // Fjern duplikater
         aktivListe = aktivListe.filter((item, index, self) => 
             index === self.findIndex((t) => t.ord === item.ord)
@@ -128,10 +126,17 @@ function generatePuzzle() {
         } else {
             document.getElementById('main-title').innerText = `Oppgaver: Blandede ord`;
         }
+    } else if (valgtBolkNøkkel === 'manuell_kategori') {
+        aktivListe = [...manueltValgteOrd];
+        antallOrd = manueltValgteOrd.length;
+        if (overskriftInput.value.trim() !== "") {
+            document.getElementById('main-title').innerText = overskriftInput.value;
+        } else {
+            document.getElementById('main-title').innerText = `Oppgaver: Manuelt valgte ord`;
+        }
     } else {
         if (!valgtBolkNøkkel || !valgtKategoriNøkkel) return;
         
-        // Hent ordlisten basert på om det er par-ord eller vanlige ord
         if (erParOrd) {
             aktivListe = hentParOrdTilVisning();
         } else {
@@ -145,9 +150,8 @@ function generatePuzzle() {
         }
     }
 
-    // Hvis det ikke er par-ord (som allerede har returnert 6 ferdige ord), gjør vi standard sjekk og shuffle
     let utvalgte = [];
-    if (erParOrd) {
+    if (erParOrd || valgtBolkNøkkel === 'manuell_kategori') {
         utvalgte = aktivListe; 
     } else {
         if (!aktivListe || aktivListe.length < antallOrd) {
@@ -193,7 +197,7 @@ function generatePuzzle() {
     setningBeholder.innerHTML = '';
 
     utvalgte.forEach(item => {
-        let setningsTekst = item.setning;
+        let setningsTekst = item.setning || "___";
         if (isUpper) setningsTekst = setningsTekst.toUpperCase();
         
         let modifisertSetning = setningsTekst.replace('___', '<span style="white-space: nowrap;"><span class="linje-blank"></span>');
@@ -206,30 +210,21 @@ function generatePuzzle() {
 
     oppdaterFont();
     oppdaterTekstStorrelse();
-    oppdaterTema(); // <-- LEGG TIL DENNE HER
+    oppdaterTema();
 }
 
-// === HJELPEFUNKSJON FOR PAR-ORD ===
 function hentParOrdTilVisning() {
-    // Bruker den globale variabelen ordlisteKategorier slik som resten av appen din
     const allePar = ordlisteKategorier.bolk7["Par-ord"];
-    
-    // Stokker om på alle parene
     const tilfeldigePar = [...allePar].sort(() => 0.5 - Math.random());
-    
-    // Tar de 3 første pakkene (parene)
     const treUtvalgtePar = tilfeldigePar.slice(0, 3);
-    
-    // Flater ut arrayen slik at det blir 6 unike objekter i en liste
     let deSeksOrdene = treUtvalgtePar.flat();
-    
-    // Stokker om på de 6 ordene til slutt så de ikke står direkte ved siden av tvillingen sin
     return deSeksOrdene.sort(() => 0.5 - Math.random());
 }
 
 function oppdaterFont() {
     const valgtFont = fontFamilySelect.value;
     const ark = document.getElementById('capture-area');
+    if (!ark) return;
     ark.style.fontFamily = valgtFont;
     document.querySelectorAll('#capture-area *').forEach(el => {
         el.style.fontFamily = valgtFont;
@@ -260,10 +255,11 @@ function resetForm() {
     if(confirm("Nullstille alt?")) {
         bolkVelger.selectedIndex = 0;
         fontFamilySelect.selectedIndex = 0;
-        temaVelger.selectedIndex = 0; // <-- LEGG TIL DENNE
+        temaVelger.selectedIndex = 0; 
         antallOrdVelger.selectedIndex = 0;
         tekstStorrelseVelger.selectedIndex = 0;
         toggleCaseCheckbox.checked = false;
+        manueltValgteOrd = [];
         
         overskriftInput.value = "";
 
@@ -280,7 +276,7 @@ function resetForm() {
 
 function downloadAsPDF() {
     const area = document.getElementById('capture-area');
-    if (area.style.display === 'none') {
+    if (!area || area.style.display === 'none') {
         alert("Du må generere en oppgave først!");
         return;
     }
@@ -336,10 +332,9 @@ function oppdaterModalKategoriMeny() {
 
 function åpneManuellVelger() {
     if (window.kunEndreBokstaver) return;
-    if (!tellerMaks || !modal) return;
+    if (!modal) return;
 
-    tellerMaks.innerText = 6;
-    søkOrdInput.value = '';
+    if (søkOrdInput) søkOrdInput.value = '';
     
     if (typeof overskriftInput !== 'undefined' && overskriftInput) {
         overskriftInput.placeholder = "Manuelt valgte ord...";
@@ -370,14 +365,14 @@ function åpneManuellVelger() {
     }
 
     oppdaterModalKategoriMeny();
-    oppdaterModalVisning();
     modal.style.display = 'flex';
 }
 
 function lukkModalOgAvbryt() {
     modal.style.display = 'none';
-    if (forrigeGyldigeBolk) {
+    if (manueltValgteOrd.length === 0 && forrigeGyldigeBolk) {
         bolkVelger.value = forrigeGyldigeBolk;
+        oppdaterKategoriMeny();
     }
 }
 
@@ -393,31 +388,31 @@ if (btnNullstillValgte) {
 
 if (søkOrdInput) søkOrdInput.addEventListener('input', oppdaterModalVisning);
 
-
 function oppdaterTema() {
     const ark = document.getElementById('capture-area');
     if (!ark) return;
 
-    // Definer alle mulige temaklasser som skal fjernes før vi legger til ny
+    // Definerer absolutt alle mulige temaklasser som finnes i CSS-en din
+    // slik at JS garantert klarer å fjerne det gamle temaet før det nye legges til.
     const alleTemaer = [
-        'theme-standard', 'theme-host', 'theme-vinter', 'theme-var', 
-        'theme-rommet', 'theme-fest', 'theme-esc', 'theme-halloween', 
-        'theme-jul', 'theme-dino', 'theme-pirat', 'theme-sport', 'theme-realfag'
+        'tema-standard', 'tema-skog', 'tema-sol', 'tema-minimal', 
+        'theme-host', 'theme-vinter', 'theme-sommer', 
+        'theme-rommet', 'theme-fest', 'theme-racerbil', 'theme-kryp', 'theme-sommerfugl', 'theme-halloween', 
+        'theme-jul', 'theme-dino', 'theme-pirat', 'theme-sport'
     ];
     
     // Fjern gamle klasser
     ark.classList.remove(...alleTemaer);
     
-    // Legg til den nye valgte klassen
+    // Legg til den nye valgte klassen fra dropdown-menyen
     const valgtTema = temaVelger.value;
     ark.classList.add(valgtTema);
 }
 
-
 function oppdaterModalVisning() {
     const maksOrd = 6; 
     const isUpper = toggleCaseCheckbox.checked;
-    const søkeTekst = stripHtml(søkOrdInput.value.toLowerCase().trim());
+    const søkeTekst = søkOrdInput ? stripHtml(søkOrdInput.value.toLowerCase().trim()) : '';
 
     let aktivListe = [];
     const mBolk = modalBolkVelger ? modalBolkVelger.value : '';
@@ -426,7 +421,6 @@ function oppdaterModalVisning() {
     if (mBolk === 'alle_ord') {
         Object.keys(ordlisteKategorier).forEach(bKey => {
             Object.keys(ordlisteKategorier[bKey]).forEach(kKey => {
-                // Spesialhåndtering hvis det er par-ord-matrisen inni matrisen
                 if (bKey === 'bolk7' && kKey === 'Par-ord') {
                     ordlisteKategorier[bKey][kKey].forEach(par => {
                         aktivListe = aktivListe.concat(par);
@@ -502,85 +496,40 @@ function oppdaterModalVisning() {
         }
     }
 
-    alleOrdContainer.innerHTML = '';
-    
-    aktivListe.forEach(item => {
-        if (søkeTekst && !item.ord.toLowerCase().includes(søkeTekst)) return;
+    if (alleOrdContainer) {
+        alleOrdContainer.innerHTML = '';
+        aktivListe.forEach(item => {
+            if (søkeTekst && !item.ord.toLowerCase().includes(søkeTekst)) return;
 
-        const ordKnapp = document.createElement('div');
-        ordKnapp.className = 'ord-knapp';
-        ordKnapp.innerText = isUpper ? item.ord.toUpperCase() : item.ord.toLowerCase();
+            const ordKnapp = document.createElement('div');
+            ordKnapp.className = 'ord-knapp';
+            ordKnapp.innerText = isUpper ? item.ord.toUpperCase() : item.ord.toLowerCase();
 
-        const erAlleredeValgt = manueltValgteOrd.some(v => v.ord === item.ord);
-        if (erAlleredeValgt) ordKnapp.classList.add('valgt');
+            const erAlleredeValgt = manueltValgteOrd.some(v => v.ord === item.ord);
+            if (erAlleredeValgt) ordKnapp.classList.add('valgt');
 
-        ordKnapp.addEventListener('click', () => {
-            if (erAlleredeValgt) {
-                manueltValgteOrd = manueltValgteOrd.filter(v => v.ord !== item.ord);
-            } else {
-                if (manueltValgteOrd.length < maksOrd) {
-                    manueltValgteOrd.push(item);
+            ordKnapp.addEventListener('click', () => {
+                if (erAlleredeValgt) {
+                    manueltValgteOrd = manueltValgteOrd.filter(v => v.ord !== item.ord);
                 } else {
-                    alert(`Du kan velge maksimalt 6 ord til denne oppgaven!`);
+                    if (manueltValgteOrd.length < maksOrd) {
+                        manueltValgteOrd.push(item);
+                    } else {
+                        alert(`Du kan velge maksimalt 6 ord til denne oppgaven!`);
+                    }
                 }
-            }
-            oppdaterModalVisning();
-        });
+                oppdaterModalVisning();
+            });
 
-        alleOrdContainer.appendChild(ordKnapp);
-    });
+            alleOrdContainer.appendChild(ordKnapp);
+        });
+    }
 }
 
 if (btnGenererValgte) {
     btnGenererValgte.addEventListener('click', () => {
         antallOrdVelger.value = manueltValgteOrd.length;
-
-        document.getElementById('placeholder-image').style.display = 'none';
-        document.getElementById('capture-area').style.display = 'block';
-
-        const isUpper = toggleCaseCheckbox.checked;
-        const antallOrd = manueltValgteOrd.length;
-
-        document.getElementById('main-title').innerText = `Oppgaver: Manuelt valgte ord`;
-
-        const leseBeholder = document.getElementById('leseOrdBeholder');
-        leseBeholder.className = (antallOrd === 6) ? "lese-grid smal" : "lese-grid";
-        leseBeholder.innerHTML = "";
-        
-        manueltValgteOrd.forEach(item => {
-            const ordDiv = document.createElement('div');
-            ordDiv.innerText = isUpper ? item.ord.toUpperCase() : item.ord.toLowerCase();
-            leseBeholder.appendChild(ordDiv);
-        });
-
-        const skriveBeholder = document.getElementById('skriveLinjerBeholder');
-        skriveBeholder.className = "skrive-grid";
-        skriveBeholder.innerHTML = "";
-
-        const skrivelinjerHtml = `<div class="lines-container"><div class="l"></div><div class="l"></div><div class="l thick"></div><div class="l"></div></div>`;
-        for (let i = 0; i < antallOrd; i++) {
-            const feltDiv = document.createElement('div');
-            feltDiv.innerHTML = skrivelinjerHtml;
-            skriveBeholder.appendChild(feltDiv);
-        }
-
-        const setningBeholder = document.getElementById('setningerBeholder');
-        setningBeholder.innerHTML = '';
-
-        manueltValgteOrd.forEach(item => {
-            let setningsTekst = item.setning;
-            if (isUpper) setningsTekst = setningsTekst.toUpperCase();
-            let modifisertSetning = setningsTekst.replace('___', '<span style="white-space: nowrap;"><span class="linje-blank"></span>');
-
-            const rad = document.createElement('div');
-            rad.className = 'setning-linje';
-            rad.innerHTML = `<div class="setning-tekst">${modifisertSetning}</span></div>`;
-            setningBeholder.appendChild(rad);
-        });
-
-        oppdaterFont();
-        oppdaterTekstStorrelse();
-        oppdaterTema(); // <-- LEGG TIL DENNE HER OGSÅ
+        generatePuzzle();
         modal.style.display = 'none';
     });
 }
@@ -592,34 +541,20 @@ bolkVelger.addEventListener('change', () => {
 
 kategoriVelger.addEventListener('change', () => {
     overskriftInput.value = ""; 
-    if (modal && modal.style.display === 'flex') {
-        oppdaterModalVisning();
-    } else {
-        autoGenerate();
-    }
+    autoGenerate();
 });
 
 if (modalBolkVelger) modalBolkVelger.addEventListener('change', oppdaterModalKategoriMeny);
 if (modalKategoriVelger) modalKategoriVelger.addEventListener('change', oppdaterModalVisning);
 
 fontFamilySelect.addEventListener('change', oppdaterFont);
+
 toggleCaseCheckbox.addEventListener('change', (event) => {
     event.stopPropagation();
     const isUpper = toggleCaseCheckbox.checked;
 
     if (modal && modal.style.display === 'flex') {
-        const valgteOrdElementer = document.querySelectorAll('#boksGruppe1 li');
-        valgteOrdElementer.forEach(li => {
-            const tekstNode = li.firstChild;
-            if (tekstNode && tekstNode.nodeType === Node.TEXT_NODE) {
-                tekstNode.textContent = isUpper ? tekstNode.textContent.toUpperCase() : tekstNode.textContent.toLowerCase();
-            }
-        });
-
-        const ordKnapper = document.querySelectorAll('.ord-knapp');
-        ordKnapper.forEach(knapp => {
-            knapp.innerText = isUpper ? knapp.innerText.toUpperCase() : knapp.innerText.toLowerCase();
-        });
+        oppdaterModalVisning();
     } 
     
     if (document.getElementById('capture-area').style.display === 'block') {
@@ -668,9 +603,7 @@ if (overskriftInput) {
 }
 
 antallOrdVelger.addEventListener('change', () => {
-    if (modal && modal.style.display === 'flex') {
-        oppdaterModalVisning();
-    } else {
+    if (bolkVelger.value !== 'manuell_kategori') {
         autoGenerate();
     }
 });

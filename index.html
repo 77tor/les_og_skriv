@@ -149,10 +149,10 @@ input:checked + .slider:before { transform: translateX(20px); }
    8. TEMA-STILER (RAMMER & FARGER FOR HVERT ENKELT TEMA)
    ========================================================================== */
 /* --- DE FIRE ORIGINALE TEMAENE --- */
-.tema-standard { background-color: #ffffff; border: 4px solid #333; }
+.tema-standard { background-color: #ffffff; border: 4px solid #2b6cb0; }
 .tema-standard #main-title { color: #2b6cb0; }
 .tema-standard .lese-grid div { background: #f7fafc; border: 2px solid #cbd5e0; color: #2d3748; }
-.tema-standard .lines-container .l.thick { border-color: #4a5568 !important; }
+.tema-standard .lines-container .l.thick { border-color: #2b6cb0 !important; }
 
 .tema-skog { background-color: #f0fff4; border: 5px solid #2f855a; }
 .tema-skog #main-title { color: #2f855a; }
@@ -164,16 +164,12 @@ input:checked + .slider:before { transform: translateX(20px); }
 .tema-sol .lese-grid div { background: #ffffff; border: 2px solid #fbd38d; color: #7b341e; border-radius: 4px; }
 .tema-sol .lines-container .l.thick { border-color: #dd6b20 !important; }
 
-.tema-minimal { background-color: #ffffff; border: 2px solid #000000; }
-.tema-minimal #main-title { color: #000000; text-transform: uppercase; }
-.tema-minimal .lese-grid div { background: #ffffff; border: 1px solid #000000; color: #000000; border-radius: 0px; box-shadow: none; }
+.tema-minimal { background-color: #ffffff; border: 2px solid #ffffff; }
+.tema-minimal #main-title { color: #000000; }
+.tema-minimal .lese-grid div { background: #ffffff; border: 2px solid #000000; color: #000000; border-radius: 4px; }
 .tema-minimal .lines-container .l.thick { border-color: #000000 !important; }
 
 /* --- DE NYERE BILDETEMAENE --- */
-.theme-standard { background-color: #ffffff; border: 4px solid #333; }
-.theme-standard #main-title { color: #333; }
-.theme-standard .lese-grid div { background: #f7fafc; border: 2px solid #cbd5e0; }
-
 .theme-host { background-color: #fffaf0; border: 6px double #d35400; }
 .theme-host #main-title { color: #d35400; }
 .theme-host .lese-grid div { background: #ffffff; border: 2px solid #e67e22; }
@@ -183,11 +179,6 @@ input:checked + .slider:before { transform: translateX(20px); }
 .theme-vinter #main-title { color: #2980b9; }
 .theme-vinter .lese-grid div { background: #ffffff; border: 2px solid #3498db; }
 .theme-vinter .lines-container .l.thick { border-color: #2980b9 !important; }
-
-.theme-var { background-color: #fafffa; border: 5px solid #2ecc71; }
-.theme-var #main-title { color: #27ae60; }
-.theme-var .lese-grid div { background: #ffffff; border: 2px solid #2ecc71; }
-.theme-var .lines-container .l.thick { border-color: #27ae60 !important; }
 
 .theme-sommer { background-color: #fffdf0; border: 5px solid #f1c40f; }
 .theme-sommer #main-title { color: #f39c12; }
@@ -204,10 +195,20 @@ input:checked + .slider:before { transform: translateX(20px); }
 .theme-fest .lese-grid div { background: #ffffff; border: 2px solid #e91e63; }
 .theme-fest .lines-container .l.thick { border-color: #ff4081 !important; }
 
-.theme-esc { background-color: #fff9ff; border: 5px solid #ff007f; }
-.theme-esc #main-title { color: #673ab7; }
-.theme-esc .lese-grid div { background: #ffffff; border: 2px solid #ff007f; }
-.theme-esc .lines-container .l.thick { border-color: #ff007f !important; }
+.theme-racerbil { background-color: #fcfcfc; border: 6px double #e53e3e; } /* Dobbel rød ramme som racing-striper */
+.theme-racerbil #main-title { color: #e53e3e; }
+.theme-racerbil .lese-grid div { background: #ffffff; border: 2px solid #1a202c; color: #1a202c; } /* Asfaltsvarte rammer rundt boksene */
+.theme-racerbil .lines-container .l.thick { border-color: #e53e3e !important; }
+
+.theme-kryp { background-color: #f4f7f4; border: 5px solid #2f855a; } /* Solid skogsgrønn ramme */
+.theme-kryp #main-title { color: #2f855a; }
+.theme-kryp .lese-grid div { background: #ffffff; border: 2px solid #8b5a2b; color: #2f855a; } /* Jordbrune rammer rundt boksene */
+.theme-kryp .lines-container .l.thick { border-color: #2f855a !important; }
+
+.theme-sommerfugl { background-color: #fbf8ff; border: 5px dashed #b7791f; } /* Stiplet ramme som sommerfuglens flukt-sti */
+.theme-sommerfugl #main-title { color: #805ad5; } /* Lavendellilla tittel */
+.theme-sommerfugl .lese-grid div { background: #ffffff; border: 2px solid #3182ce; color: #4a5568; } /* Himmelblå rammer rundt boksene */
+.theme-sommerfugl .lines-container .l.thick { border-color: #805ad5 !important; }}
 
 .theme-halloween { background-color: #fcf6f0; border: 5px solid #333; }
 .theme-halloween #main-title { color: #d35400; }
@@ -234,11 +235,6 @@ input:checked + .slider:before { transform: translateX(20px); }
 .theme-sport .lese-grid div { background: #ffffff; border: 2px solid #2ecc71; }
 .theme-sport .lines-container .l.thick { border-color: #27ae60 !important; }
 
-.theme-realfag { background-color: #fcfdfd; border: 4px solid #16a085; }
-.theme-realfag #main-title { color: #16a085; }
-.theme-realfag .lese-grid div { background: #ffffff; border: 2px solid #2980b9; }
-.theme-realfag .lines-container .l.thick { border-color: #16a085 !important; }
-
 /* ==========================================================================
    TEMA BILDER-INTEGRASJON (Plassering og bildestier for alle 3 bildene)
    ========================================================================== */
@@ -250,12 +246,13 @@ input:checked + .slider:before { transform: translateX(20px); }
 
 /* Aktiverer visning for alle bildebaserte temaer */
 .theme-dino #theme-img-1, .theme-dino #theme-img-2, .theme-dino #theme-img-3,
-.theme-esc #theme-img-1, .theme-esc #theme-img-2, .theme-esc #theme-img-3,
 .theme-fest #theme-img-1, .theme-fest #theme-img-2, .theme-fest #theme-img-3,
+.theme-racerbil #theme-img-1, .theme-racerbil #theme-img-2, .theme-racerbil #theme-img-3,
+.theme-kryp #theme-img-1, .theme-kryp #theme-img-2, .theme-kryp #theme-img-3,
+.theme-sommerfugl #theme-img-1, .theme-sommerfugl #theme-img-2, .theme-sommerfugl #theme-img-3,
 .theme-halloween #theme-img-1, .theme-halloween #theme-img-2, .theme-halloween #theme-img-3,
 .theme-host #theme-img-1, .theme-host #theme-img-2, .theme-host #theme-img-3,
 .theme-jul #theme-img-1, .theme-jul #theme-img-2, .theme-jul #theme-img-3,
-.theme-realfag #theme-img-1, .theme-realfag #theme-img-2, .theme-realfag #theme-img-3,
 .theme-pirat #theme-img-1, .theme-pirat #theme-img-2, .theme-pirat #theme-img-3,
 .theme-sommer #theme-img-1, .theme-sommer #theme-img-2, .theme-sommer #theme-img-3,
 .theme-sport #theme-img-1, .theme-sport #theme-img-2, .theme-sport #theme-img-3,
@@ -267,57 +264,62 @@ input:checked + .slider:before { transform: translateX(20px); }
 .theme-dino #theme-img-2 { background-image: url('Bilder/dinosaur_02.png'); }
 .theme-dino #theme-img-3 { background-image: url('Bilder/dinosaur_03.png'); }
 
-/* 2. EUROVISJON */
-.theme-esc #theme-img-1 { background-image: url('Bilder/eurovisjon_01.png'); }
-.theme-esc #theme-img-2 { background-image: url('Bilder/eurovisjon_02.png'); }
-.theme-esc #theme-img-3 { background-image: url('Bilder/eurovisjon_03.png'); }
-
-/* 3. FEST */
+/* 2. FEST */
 .theme-fest #theme-img-1 { background-image: url('Bilder/fest_01.png'); }
 .theme-fest #theme-img-2 { background-image: url('Bilder/fest_02.png'); }
 .theme-fest #theme-img-3 { background-image: url('Bilder/fest_03.png'); }
 
-/* 4. HALLOWEEN */
+/* 3. RACERBIL */
+.theme-racerbil #theme-img-1 { background-image: url('Bilder/racerbil_01.png'); }
+.theme-racerbil #theme-img-2 { background-image: url('Bilder/racerbil_02.png'); }
+.theme-racerbil #theme-img-3 { background-image: url('Bilder/racerbil_03.png'); }
+
+/* 4. SMÅKRYP */
+.theme-kryp #theme-img-1 { background-image: url('Bilder/kryp_01.png'); }
+.theme-kryp #theme-img-2 { background-image: url('Bilder/kryp_02.png'); }
+.theme-kryp #theme-img-3 { background-image: url('Bilder/kryp_03.png'); }
+
+/* 5. SOMMERFUGL */
+.theme-sommerfugl #theme-img-1 { background-image: url('Bilder/sommerfugl_01.png'); }
+.theme-sommerfugl #theme-img-2 { background-image: url('Bilder/sommerfugl_02.png'); }
+.theme-sommerfugl #theme-img-3 { background-image: url('Bilder/sommerfugl_03.png'); }
+
+/* 6. HALLOWEEN */
 .theme-halloween #theme-img-1 { background-image: url('Bilder/halloween_01.png'); }
 .theme-halloween #theme-img-2 { background-image: url('Bilder/halloween_02.png'); }
 .theme-halloween #theme-img-3 { background-image: url('Bilder/halloween_03.png'); }
 
-/* 5. HØST */
+/* 7. HØST */
 .theme-host #theme-img-1 { background-image: url('Bilder/host_01.png'); }
 .theme-host #theme-img-2 { background-image: url('Bilder/host_02.png'); }
 .theme-host #theme-img-3 { background-image: url('Bilder/host_03.png'); }
 
-/* 6. JUL */
+/* 8. JUL */
 .theme-jul #theme-img-1 { background-image: url('Bilder/jul_01.png'); }
 .theme-jul #theme-img-2 { background-image: url('Bilder/jul_02.png'); }
 .theme-jul #theme-img-3 { background-image: url('Bilder/jul_03.png'); }
 
-/* 7. NATURFAG / REALFAG */
-.theme-realfag #theme-img-1 { background-image: url('Bilder/naturfag_01.png'); }
-.theme-realfag #theme-img-2 { background-image: url('Bilder/naturfag_02.png'); }
-.theme-realfag #theme-img-3 { background-image: url('Bilder/naturfag_03.png'); }
-
-/* 8. SJØRØVER */
+/* 9. SJØRØVER */
 .theme-pirat #theme-img-1 { background-image: url('Bilder/sjorover_01.png'); }
 .theme-pirat #theme-img-2 { background-image: url('Bilder/sjorover_02.png'); }
 .theme-pirat #theme-img-3 { background-image: url('Bilder/sjorover_03.png'); }
 
-/* 9. SOMMER */
+/* 10. SOMMER */
 .theme-sommer #theme-img-1 { background-image: url('Bilder/sommer_01.png'); }
 .theme-sommer #theme-img-2 { background-image: url('Bilder/sommer_02.png'); }
 .theme-sommer #theme-img-3 { background-image: url('Bilder/sommer_03.png'); }
 
-/* 10. SPORT */
+/* 11. SPORT */
 .theme-sport #theme-img-1 { background-image: url('Bilder/sport_01.png'); }
 .theme-sport #theme-img-2 { background-image: url('Bilder/sport_02.png'); }
 .theme-sport #theme-img-3 { background-image: url('Bilder/sport_03.png'); }
 
-/* 11. VERDENSROMMET */
+/* 12. VERDENSROMMET */
 .theme-rommet #theme-img-1 { background-image: url('Bilder/verdensrommet_01.png'); }
 .theme-rommet #theme-img-2 { background-image: url('Bilder/verdensrommet_02.png'); }
 .theme-rommet #theme-img-3 { background-image: url('Bilder/verdensrommet_03.png'); }
 
-/* 12. VINTER */
+/* 13. VINTER */
 .theme-vinter #theme-img-1 { background-image: url('Bilder/vinter_01.png'); }
 .theme-vinter #theme-img-2 { background-image: url('Bilder/vinter_02.png'); }
 .theme-vinter #theme-img-3 { background-image: url('Bilder/vinter_03.png'); }
@@ -326,9 +328,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 /* ==========================================================================
    9. STRICT PRINT-STYLING (RENE A4 REGLER FOR UTSKRIFT)
    ========================================================================== */
-/* ==========================================================================
-   9. STRICT PRINT-STYLING (RENE A4 REGLER FOR UTSKRIFT)
-   ========================================================================== */
+
 @media print { 
   @page { 
     size: A4 portrait; 
@@ -495,13 +495,14 @@ input:checked + .slider:before { transform: translateX(20px); }
         <option value="theme-sommer">🌸 Sommer</option>
         <option value="theme-rommet">🚀 Verdensrommet</option>
         <option value="theme-fest">🎈 Fest / Bursdag</option>
-        <option value="theme-esc">🎤 Eurovision</option>
+        <option value="theme-racerbil">🏎️ Racerbil</option>
+        <option value="theme-kryp">🐞 Småkryp</option>
+        <option value="theme-sommerfugl">🦋 Sommerfugler</option>
         <option value="theme-halloween">🎃 Halloween</option>
         <option value="theme-jul">🎄 Jul</option>
         <option value="theme-dino">🦖 Dinosaurer</option>
         <option value="theme-pirat">🏴‍☠️ Sjørøvere</option>
         <option value="theme-sport">⚽️ Sport / Aktivitet</option>
-        <option value="theme-realfag">🧬 Realfag</option>
     </select>
 </div>
 
