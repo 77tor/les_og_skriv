@@ -1,6 +1,5 @@
 // === app.js ===
 
-// Hent HTML-elementer
 const bolkVelger = document.getElementById('bolkVelger');
 const kategoriVelger = document.getElementById('kategoriVelger');
 const fontFamilySelect = document.getElementById('font-family');
@@ -19,7 +18,6 @@ const btnSkrivUt = document.getElementById('btnSkrivUt');
 const btnLastNed = document.getElementById('btnLastNed');
 const hamburgerBtn = document.getElementById('hamburgerBtn');
 
-// Variabler for å holde styr på tilstander
 let forrigeGyldigeBolk = 'bolk1'; 
 let manueltValgteOrd = []; 
 
@@ -38,7 +36,6 @@ function oppdaterKategoriMeny() {
         return;
     }
     
-    // Sørg for at underkategorimenyen er synlig for vanlige bolker og manuell kategori
     kategoriVelger.style.display = 'block';
 
     // 2. Logikk for "Velg ord selv"
@@ -211,6 +208,7 @@ function generatePuzzle() {
     oppdaterFont();
     oppdaterTekstStorrelse();
     oppdaterTema();
+    sjekkOverlappMedBilde();
 }
 
 function hentParOrdTilVisning() {
@@ -249,6 +247,7 @@ function oppdaterTekstStorrelse() {
 
     leseOrd.forEach(el => el.style.fontSize = leseSize);
     setninger.forEach(el => el.style.fontSize = setningSize);
+    sjekkOverlappMedBilde();
 }
 
 function resetForm() { 
@@ -392,8 +391,6 @@ function oppdaterTema() {
     const ark = document.getElementById('capture-area');
     if (!ark) return;
 
-    // Definerer absolutt alle mulige temaklasser som finnes i CSS-en din
-    // slik at JS garantert klarer å fjerne det gamle temaet før det nye legges til.
     const alleTemaer = [
         'tema-standard', 'tema-skog', 'tema-sol', 'tema-minimal', 
         'theme-host', 'theme-vinter', 'theme-sommer', 
@@ -401,12 +398,38 @@ function oppdaterTema() {
         'theme-jul', 'theme-dino', 'theme-pirat', 'theme-sport'
     ];
     
-    // Fjern gamle klasser
     ark.classList.remove(...alleTemaer);
     
-    // Legg til den nye valgte klassen fra dropdown-menyen
     const valgtTema = temaVelger.value;
     ark.classList.add(valgtTema);
+    
+    // Kjører sjekken i tilfelle det nye temaet har et bilde som krasjer med teksten
+    sjekkOverlappMedBilde();
+}
+
+
+function sjekkOverlappMedBilde() {
+    const setninger = document.getElementById('setningerBeholder');
+    const bilde3 = document.getElementById('theme-img-3');
+    const captureArea = document.getElementById('capture-area');
+
+    if (setninger && bilde3 && captureArea) {
+        bilde3.style.display = ''; 
+
+        const captureTop = captureArea.getBoundingClientRect().top;
+        const setningerMål = setninger.getBoundingClientRect();
+        const bildeMål = bilde3.getBoundingClientRect();
+        
+        if (bildeMål.height === 0 || bildeMål.top === 0) return;
+
+        const setningerBunnPosisjon = setningerMål.bottom - captureTop;
+        const bildeToppPosisjon = bildeMål.top - captureTop;
+
+        if (setningerBunnPosisjon >= (bildeToppPosisjon - 20)) {
+            bilde3.style.setProperty('display', 'none', 'important');
+            console.log("Kollisjon oppdaget! Skjuler bilde 3 for å unngå tekstoverlapping.");
+        }
+    }
 }
 
 function oppdaterModalVisning() {
@@ -547,7 +570,10 @@ kategoriVelger.addEventListener('change', () => {
 if (modalBolkVelger) modalBolkVelger.addEventListener('change', oppdaterModalKategoriMeny);
 if (modalKategoriVelger) modalKategoriVelger.addEventListener('change', oppdaterModalVisning);
 
-fontFamilySelect.addEventListener('change', oppdaterFont);
+fontFamilySelect.addEventListener('change', () => {
+    oppdaterFont();
+    sjekkOverlappMedBilde(); 
+});
 
 toggleCaseCheckbox.addEventListener('change', (event) => {
     event.stopPropagation();
@@ -577,6 +603,8 @@ toggleCaseCheckbox.addEventListener('change', (event) => {
                 }
             });
         });
+        
+        sjekkOverlappMedBilde();
     }
 });
 
@@ -609,7 +637,9 @@ antallOrdVelger.addEventListener('change', () => {
 });
 
 tekstStorrelseVelger.addEventListener('change', oppdaterTekstStorrelse);
-temaVelger.addEventListener('change', oppdaterTema);
+temaVelger.addEventListener('change', () => {
+    oppdaterTema();
+});
 
 if (btnLagOppgave) btnLagOppgave.addEventListener('click', generatePuzzle);
 if (btnNullstill) btnNullstill.addEventListener('click', resetForm);
