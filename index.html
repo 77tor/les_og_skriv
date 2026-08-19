@@ -208,7 +208,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 .theme-sommerfugl { background-color: #fbf8ff; border: 5px dashed #b7791f; } /* Stiplet ramme som sommerfuglens flukt-sti */
 .theme-sommerfugl #main-title { color: #805ad5; } /* Lavendellilla tittel */
 .theme-sommerfugl .lese-grid div { background: #ffffff; border: 2px solid #3182ce; color: #4a5568; } /* Himmelblå rammer rundt boksene */
-.theme-sommerfugl .lines-container .l.thick { border-color: #805ad5 !important; }}
+.theme-sommerfugl .lines-container .l.thick { border-color: #805ad5 !important; }
 
 .theme-halloween { background-color: #fcf6f0; border: 5px solid #333; }
 .theme-halloween #main-title { color: #d35400; }
@@ -470,13 +470,28 @@ input:checked + .slider:before { transform: translateX(20px); }
         <option value="stor">Stor</option>
     </select>
 </div>
-        <div class="control-item">
-            <span>STORE bokstaver</span>
-            <label class="switch">
-                <input type="checkbox" id="toggle-case">
-                <span class="slider"></span>
-            </label>
-        </div>
+
+<div class="control-item" style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+    <!-- Bryter 1: Store bokstaver -->
+    <div style="display: flex; align-items: center; gap: 6px;">
+        <span style="font-size: 0.85rem;">Store bokst.</span>
+        <label class="switch">
+            <input type="checkbox" id="toggle-case">
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <!-- Bryter 2: Ulik rekkefølge -->
+    <div style="display: flex; align-items: center; gap: 6px;">
+        <span style="font-size: 0.85rem;">Ulik rekkef.</span>
+        <label class="switch">
+            <input type="checkbox" id="toggle-shuffle-sentences">
+            <span class="slider"></span>
+        </label>
+    </div>
+</div>
+
+
 <div class="menu-item overskrift-rad">
     <label for="overskriftInput">Egen overskrift:</label>
     <input type="text" id="overskriftInput" placeholder="Automatisk...">

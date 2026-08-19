@@ -4,6 +4,7 @@ const bolkVelger = document.getElementById('bolkVelger');
 const kategoriVelger = document.getElementById('kategoriVelger');
 const fontFamilySelect = document.getElementById('font-family');
 const toggleCaseCheckbox = document.getElementById('toggle-case');
+const toggleShuffleSentencesCheckbox = document.getElementById('toggle-shuffle-sentences');
 const antallOrdVelger = document.getElementById('antallOrdVelger');
 const tekstStorrelseVelger = document.getElementById('tekstStorrelseVelger');
 const overskriftInput = document.getElementById('overskriftInput');
@@ -89,7 +90,8 @@ function generatePuzzle() {
 
     const valgtBolkNøkkel = bolkVelger.value;
     const valgtKategoriNøkkel = kategoriVelger.value;
-    const isUpper = toggleCaseCheckbox.checked;
+    const isUpper = toggleCaseCheckbox ? toggleCaseCheckbox.checked : false;
+    const shuffleSentences = toggleShuffleSentencesCheckbox ? toggleShuffleSentencesCheckbox.checked : false;
     let antallOrd = parseInt(antallOrdVelger.value, 10);
 
     let aktivListe = [];
@@ -193,7 +195,21 @@ function generatePuzzle() {
     const setningBeholder = document.getElementById('setningerBeholder');
     setningBeholder.innerHTML = '';
 
-    utvalgte.forEach(item => {
+    // Sjekk om setningene skal stokkes i ulik rekkefølge
+    let setningsListe = [...utvalgte];
+    if (shuffleSentences && setningsListe.length > 1) {
+        let forsoek = 0;
+        let erUlik = false;
+        
+        // Stokker om og sikrer at den nye rekkefølgen faktiske avviker fra den opprinnelige
+        while (!erUlik && forsoek < 10) {
+            setningsListe = shuffle([...utvalgte]);
+            erUlik = setningsListe.some((item, index) => item.ord !== utvalgte[index].ord);
+            forsoek++;
+        }
+    }
+
+    setningsListe.forEach(item => {
         let setningsTekst = item.setning || "___";
         if (isUpper) setningsTekst = setningsTekst.toUpperCase();
         
@@ -257,7 +273,8 @@ function resetForm() {
         temaVelger.selectedIndex = 0; 
         antallOrdVelger.selectedIndex = 0;
         tekstStorrelseVelger.selectedIndex = 0;
-        toggleCaseCheckbox.checked = false;
+        if (toggleCaseCheckbox) toggleCaseCheckbox.checked = false;
+        if (toggleShuffleSentencesCheckbox) toggleShuffleSentencesCheckbox.checked = false;
         manueltValgteOrd = [];
         
         overskriftInput.value = "";
@@ -434,7 +451,7 @@ function sjekkOverlappMedBilde() {
 
 function oppdaterModalVisning() {
     const maksOrd = 6; 
-    const isUpper = toggleCaseCheckbox.checked;
+    const isUpper = toggleCaseCheckbox ? toggleCaseCheckbox.checked : false;
     const søkeTekst = søkOrdInput ? stripHtml(søkOrdInput.value.toLowerCase().trim()) : '';
 
     let aktivListe = [];
@@ -575,38 +592,44 @@ fontFamilySelect.addEventListener('change', () => {
     sjekkOverlappMedBilde(); 
 });
 
-toggleCaseCheckbox.addEventListener('change', (event) => {
-    event.stopPropagation();
-    const isUpper = toggleCaseCheckbox.checked;
+if (toggleShuffleSentencesCheckbox) {
+    toggleShuffleSentencesCheckbox.addEventListener('change', autoGenerate);
+}
 
-    if (modal && modal.style.display === 'flex') {
-        oppdaterModalVisning();
-    } 
-    
-    if (document.getElementById('capture-area').style.display === 'block') {
-        const leseOrdElementer = document.querySelectorAll('#leseOrdBeholder div');
-        leseOrdElementer.forEach(el => {
-            el.textContent = isUpper ? el.textContent.toUpperCase() : el.textContent.toLowerCase();
-        });
+if (toggleCaseCheckbox) {
+    toggleCaseCheckbox.addEventListener('change', (event) => {
+        event.stopPropagation();
+        const isUpper = toggleCaseCheckbox.checked;
 
-        const setningsTekster = document.querySelectorAll('.setning-tekst');
-        setningsTekster.forEach(el => {
-            el.childNodes.forEach(node => {
-                if (node.nodeType === Node.TEXT_NODE) {
-                    node.textContent = isUpper ? node.textContent.toUpperCase() : node.textContent.toLowerCase();
-                } else if (node.nodeType === Node.ELEMENT_NODE) {
-                    node.childNodes.forEach(subNode => {
-                        if (subNode.nodeType === Node.TEXT_NODE) {
-                            subNode.textContent = isUpper ? subNode.textContent.toUpperCase() : subNode.textContent.toLowerCase();
-                        }
-                    });
-                }
-            });
-        });
+        if (modal && modal.style.display === 'flex') {
+            oppdaterModalVisning();
+        } 
         
-        sjekkOverlappMedBilde();
-    }
-});
+        if (document.getElementById('capture-area').style.display === 'block') {
+            const leseOrdElementer = document.querySelectorAll('#leseOrdBeholder div');
+            leseOrdElementer.forEach(el => {
+                el.textContent = isUpper ? el.textContent.toUpperCase() : el.textContent.toLowerCase();
+            });
+
+            const setningsTekster = document.querySelectorAll('.setning-tekst');
+            setningsTekster.forEach(el => {
+                el.childNodes.forEach(node => {
+                    if (node.nodeType === Node.TEXT_NODE) {
+                        node.textContent = isUpper ? node.textContent.toUpperCase() : node.textContent.toLowerCase();
+                    } else if (node.nodeType === Node.ELEMENT_NODE) {
+                        node.childNodes.forEach(subNode => {
+                            if (subNode.nodeType === Node.TEXT_NODE) {
+                                subNode.textContent = isUpper ? subNode.textContent.toUpperCase() : subNode.textContent.toLowerCase();
+                            }
+                        });
+                    }
+                });
+            });
+            
+            sjekkOverlappMedBilde();
+        }
+    });
+}
 
 if (overskriftInput) {
     overskriftInput.addEventListener('input', () => {
