@@ -593,7 +593,12 @@ fontFamilySelect.addEventListener('change', () => {
 });
 
 if (toggleShuffleSentencesCheckbox) {
-    toggleShuffleSentencesCheckbox.addEventListener('change', autoGenerate);
+    toggleShuffleSentencesCheckbox.addEventListener('change', () => {
+        // Genererer oppgaven på nytt med de eksisterende ordene dersom siden allerede er aktiv
+        if (document.getElementById('capture-area').style.display === 'block') {
+            generatePuzzle();
+        }
+    });
 }
 
 if (toggleCaseCheckbox) {
