@@ -21,6 +21,7 @@ const hamburgerBtn = document.getElementById('hamburgerBtn');
 
 let forrigeGyldigeBolk = 'bolk1'; 
 let manueltValgteOrd = []; 
+let sistUtvalgteOrd = []; // Husker de nåværende ordene på arket
 
 function oppdaterKategoriMeny() {
     const valgtBolkNøkkel = bolkVelger.value;
@@ -149,7 +150,7 @@ function generatePuzzle() {
         }
     }
 
-    let utvalgte = [];
+let utvalgte = [];
     if (erParOrd || valgtBolkNøkkel === 'manuell_kategori') {
         utvalgte = aktivListe; 
     } else {
@@ -157,8 +158,16 @@ function generatePuzzle() {
             alert(`Fant ikke nok ord (minst ${antallOrd}) i denne listen.`);
             return;
         }
-        utvalgte = shuffle([...aktivListe]).slice(0, antallOrd);
+        
+        // Hvis vi bare vil endre rekkefølgen på setningene, gjenbruker vi de forrige ordene
+        if (window.kunGjenbrukOrd && sistUtvalgteOrd.length === antallOrd) {
+            utvalgte = sistUtvalgteOrd;
+        } else {
+            utvalgte = shuffle([...aktivListe]).slice(0, antallOrd);
+            sistUtvalgteOrd = utvalgte; // Lagrer de nylig trukkede ordene
+        }
     }
+    window.kunGjenbrukOrd = false; // Nullstill flagget etter generering
 
     // 1. GENERER LESE-ORD
     const leseBeholder = document.getElementById('leseOrdBeholder');
@@ -594,8 +603,8 @@ fontFamilySelect.addEventListener('change', () => {
 
 if (toggleShuffleSentencesCheckbox) {
     toggleShuffleSentencesCheckbox.addEventListener('change', () => {
-        // Genererer oppgaven på nytt med de eksisterende ordene dersom siden allerede er aktiv
         if (document.getElementById('capture-area').style.display === 'block') {
+            window.kunGjenbrukOrd = true; // Signaliserer at vi vil beholde ordene
             generatePuzzle();
         }
     });
