@@ -3,346 +3,399 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bingo-generator</title>
-    <link rel="icon" type="image/png" href="bingo_02.png">
-    <link rel="apple-touch-icon" href="bingo_02.png">
-    <style>
-        @font-face {
-            font-family: 'Skogstavskrift';
-            src: url('skogstavskrift.otf') format('opentype');
-            font-weight: normal; font-style: normal;
-        }
-        @font-face {
-            font-family: 'Trykkskrift';
-            src: url('trykkskrift.otf') format('opentype');
-            font-weight: normal; font-style: normal;
-        }
-        @import url('https://fonts.googleapis.com/css2?family=Andika&display=swap');
+    <title>Les og skriv</title>
+    <link rel="icon" type="image/png" href="les_skriv_03.png">
+    <link rel="apple-touch-icon" href="les_skriv_03.png">
 
-        :root {
-            --sidebar-bg: #243447;
-            --accent-green: #27ae60;
-            --sidebar-text: #ffffff;
-            --main-bg: #f0f2f5;
-        }
+<script src="ordliste_720.js" defer></script>
+<script src="app.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
 
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            margin: 0; display: flex; height: 100vh; 
-            background-color: var(--main-bg);
-            overflow: hidden; 
-        }
+<style>
+/* ==========================================================================
+   1. FONTS, VARIABLER & GLOBAL STYLING
+   ========================================================================== */
+@font-face { font-family: 'Skogstavskrift'; src: url('skogstavskrift.otf') format('opentype'); font-weight: normal; font-style: normal; }
+@font-face { font-family: 'Trykkskrift'; src: url('trykkskrift.otf') format('opentype'); font-weight: normal; font-style: normal; }
+@import url('https://fonts.googleapis.com/css2?family=Andika&display=swap');
+:root { --vokal-farge: #ffcccc; --vokal-tekst: #e74c3c; --konsonant-tekst: #2c3e50; --konsonant-overskrift: #2980b9; --alt-match: #27ae60; --sidebar-bg: #243447; --item-bg: #2c3e50; --accent-green: #27ae60; --sidebar-text: #ffffff; --main-bg: #f0f2f5; --btn-generate: var(--accent-green); --btn-reset: #ff7675; --btn-print: #2980b9; --btn-download: #9b59b6; --grid-border: #333; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; display: flex; height: 100vh; background-color: var(--main-bg); color: #333; overflow: hidden; }
 
-        .sidebar {
-            width: 350px; min-width: 350px; 
-            background-color: var(--sidebar-bg); color: var(--sidebar-text);
-            padding: 15px 15px 2px 15px; box-sizing: border-box; 
-            display: flex; flex-direction: column;
-            box-shadow: 4px 0 15px rgba(0,0,0,0.3); z-index: 10; 
-            overflow-y: auto;
-        }
+/* ==========================================================================
+   2. SIDEBAR, MENY-ELEMENTER & KNAPPER
+   ========================================================================== */
+.sidebar { width: 350px; min-width: 350px; background-color: var(--sidebar-bg); color: var(--sidebar-text); padding: 15px 15px 2px 15px; box-sizing: border-box; display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.3); z-index: 10; overflow-y: auto; max-height: 100vh; }
+.sidebar h2 { margin: 0 0 15px 0; font-size: 1.1rem; text-align: center; text-transform: uppercase; }
+.control-item { display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 8px; margin-bottom: 6px; font-size: 0.9rem; }
+select, input[type="number"] { background: #ecf0f1; border: none; border-radius: 4px; padding: 5px; font-size: 0.8rem; width: 160px; }
+textarea { width: 100%; height: 95px; padding: 10px; border-radius: 6px; border: none; font-family: inherit; font-size: 0.9rem; box-sizing: border-box; margin-bottom: 15px; background-color: #ecf0f1; resize: none; }
+.switch { position: relative; display: inline-block; width: 40px; height: 20px; flex-shrink: 0; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
+.slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .slider { background-color: var(--accent-green); }
+input:checked + .slider:before { transform: translateX(20px); }
+.action-btn { width: 100%; padding: 10px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; margin-bottom: 0; color: white; transition: 0.2s; box-sizing: border-box; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; }
+.action-btn:hover { filter: brightness(1.2); transform: translateY(-2px); }
+.btn-row { display: flex; gap: 10px; margin-top: 2px; }
+.btn-generate { background-color: var(--btn-generate); }
+.btn-reset { background-color: var(--btn-reset); }
+.btn-print { background-color: var(--btn-print); }
+.btn-download { background-color: var(--btn-download); }
 
-        .sidebar h2 { text-align: center; text-transform: uppercase; font-size: 1.1rem; margin-top: 0; margin-bottom: 15px; }
+/* ==========================================================================
+   3. HAMBURGERMENY & DROPDOWN
+   ========================================================================== */
+.menu-container { position: relative; margin-bottom: 10px; }
+.hamburger { display: flex; flex-direction: column; gap: 4px; cursor: pointer; width: 20px; padding: 5px; }
+.hamburger span { display: block; width: 100%; height: 2px; background-color: white; border-radius: 1px; transition: 0.3s; }
+.menu-item-disabled { opacity: 0.4; filter: grayscale(100%); pointer-events: none; cursor: default; }
+.dropdown-menu { display: none; position: absolute; top: 25px; left: 0; background-color: #2c3e50; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; width: 200px; z-index: 100; box-shadow: 5px 5px 15px rgba(0,0,0,0.5); }
+.dropdown-menu.show { display: block; }
+.dropdown-menu a { display: block; color: white; padding: 12px 15px; text-decoration: none; font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.dropdown-menu a:hover { background-color: #34495e; }
+.menu-icon { width: 20px; height: 20px; margin-right: 10px; vertical-align: middle; object-fit: contain; border-radius: 3px; }
 
-        textarea { 
-            width: 100%; height: 120px; padding: 10px; border-radius: 6px; border: none; 
-            margin-bottom: 15px; background-color: #ecf0f1; resize: none; box-sizing: border-box;
-            font-family: inherit; font-size: 0.9rem; color: #333;
-        }
+/* ==========================================================================
+   4. EGEN OVERSKRIFT (SPESIFIKK RAD-STYLING)
+   ========================================================================== */
+.menu-item.overskrift-rad { display: flex !important; align-items: center !important; justify-content: space-between !important; background: rgba(0,0,0,0.2) !important; padding: 10px 12px !important; border-radius: 8px !important; margin-bottom: 6px !important; box-sizing: border-box !important; }
+.menu-item.overskrift-rad label { color: var(--sidebar-text) !important; font-size: 0.9rem !important; font-weight: normal !important; white-space: nowrap !important; margin: 0 !important; }
+.menu-item.overskrift-rad input[type="text"] { width: 160px !important; height: 28px !important; padding: 3px 8px !important; font-size: 0.8rem !important; font-family: inherit !important; box-sizing: border-box !important; border-radius: 4px !important; background-color: #ffffff !important; color: #2c3e50 !important; border: none !important; }
+.menu-item.overskrift-rad input[type="text"]::placeholder { color: #94a3b8 !important; opacity: 1 !important; }
 
-        .control-item {
-            display: flex; align-items: center; justify-content: space-between;
-            background: rgba(0,0,0,0.2); padding: 5px 10px; border-radius: 8px; 
-            margin-bottom: 8px; font-size: 0.85rem;
-        }
+/* ==========================================================================
+   5. MANUELLE ORDGRUPPEBOKSER
+   ========================================================================== */
+.ord-gruppe-boks { border: 2px dashed #cbd5e0; border-radius: 6px; padding: 12px; margin-bottom: 15px; background-color: #ffffff; transition: background-color 0.3s ease, border-color 0.3s ease; }
+.ord-gruppe-boks h4 { margin: 0 0 8px 0; font-size: 0.9rem; color: #4a5568; text-transform: uppercase; letter-spacing: 0.5px; }
+.ord-gruppe-boks ul { list-style: none; padding: 0; margin: 0; }
+.ord-gruppe-boks.mangler-ord { background-color: #fff5f5 !important; border-color: #feb2b2 !important; }
+.ord-gruppe-boks.full-ord { background-color: #f0fff4 !important; border-color: #9ae6b4 !important; }
 
-        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { 
-            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; 
-            background-color: #ccc; transition: .4s; border-radius: 20px; 
-        }
-        .slider:before { 
-            position: absolute; content: ""; height: 14px; width: 14px; 
-            left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; 
-        }
-        input:checked + .slider { background-color: var(--accent-green); }
-        input:checked + .slider:before { transform: translateX(20px); }
+/* ==========================================================================
+   6. HOVEDOMRÅDE & SKALERING AV FORHÅNDSVISNING
+   ========================================================================== */
+.main-content { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 40px 20px 20px 20px; height: 100vh; box-sizing: border-box; }
+.ark-skalering { display: flex; align-items: center; justify-content: center; transform: scale(0.75); transform-origin: center top; }
+@media (max-height: 850px) { .ark-skalering { transform: scale(0.65); } }
+@media (max-height: 720px) { .ark-skalering { transform: scale(0.52); } }
 
-        select, input[type="number"] {
-            background: #ecf0f1; border: none; border-radius: 4px; padding: 4px; width: 120px;
-            font-family: inherit; font-size: 0.85rem; color: #333; box-sizing: border-box;
-        }
-        select:focus, input[type="number"]:focus { outline: none; }
+/* ==========================================================================
+   7. A4 ARKET & INNHOLD PÅ ARKET (PRINT & FORHÅNDSVISNING)
+   ========================================================================== */
+#capture-area { position: relative; background: white; padding: 12mm 18mm; padding-top: 65px !important; width: 210mm; height: 297mm; min-width: 210mm; min-height: 297mm; box-shadow: 0 10px 30px rgba(0,0,0,0.15); box-sizing: border-box; overflow: hidden; }
+#capture-area::before { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-size: 1.6rem; letter-spacing: 12px; white-space: nowrap; z-index: 3; }
+#capture-area::after { position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); font-size: 16rem; opacity: 0.04; pointer-events: none; z-index: -1; white-space: nowrap; }
+#main-title, .lese-grid, .skrive-grid, #setningerBeholder, .instruksjon { position: relative; z-index: 2; }
 
-        .file-input-wrapper {
-            background: #ecf0f1; border-radius: 4px; padding: 4px; width: 120px; 
-            box-sizing: border-box; overflow: hidden;
-        }
-        .file-input-wrapper input[type="file"] {
-            width: 100%; font-size: 0.7rem; color: #333; cursor: pointer; border: none; background: transparent; padding: 0;
-        }
+/* --- VANNMERKE-INNHOLD FOR HVERT TEMA (Valgfritt å beholde i bakgrunnen) --- */
+.theme-standard::after { content: ""; }
+.theme-host::after { content: "🍁"; }
+.theme-vinter::after { content: "☃️"; }
+.theme-var::after { content: "🦋"; }
+.theme-rommet::after { content: "🪐"; }
+.theme-fest::after { content: "🎉"; }
+.theme-esc::after { content: "🎶"; }
+.theme-halloween::after { content: "👻"; }
+.theme-jul::after { content: "🎁"; }
+.theme-dino::after { content: "🦖"; }
+.theme-pirat::after { content: "⚓️"; }
+.theme-sport::after { content: "🏆"; }
+.theme-realfag::after { content: "🧪"; }
 
-        .action-btn { 
-            width: 100%; 
-            padding: 10px; 
-            border-radius: 8px; 
-            border: none; 
-            font-weight: 600; 
-            cursor: pointer; 
-            margin-bottom: 8px; 
-            color: white; 
-            transition: 0.2s;
-            box-sizing: border-box; 
-            font-size: 0.85rem;
-            display: flex;         
-            align-items: center;   
-            justify-content: center; 
-        }
-        .action-btn:hover { filter: brightness(1.2); transform: translateY(-2px); }
-        
-        #btn-generate { background-color: var(--accent-green); }
-        #btn-reset { background-color: #e74c3c; }
-        #btn-print { background-color: #3498db; }
+#main-title { font-size: 2.2rem; color: #333; text-align: center; margin-top: 0; margin-bottom: 30px; text-transform: none; letter-spacing: 2px; }
+.instruksjon { font-size: 1.6rem; font-weight: bold; margin-top: 35px; margin-bottom: 15px; text-decoration: underline; }
+.ord-tabell { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
+.ord-tabell td { border: 2px solid var(--grid-border); text-align: center; padding: 15px; font-size: 2.2rem; width: 33.33%; }
+.lese-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin-bottom: 20px; }
+.lese-grid div { border: 2px solid var(--grid-border); text-align: center; padding: 12px; font-size: 2.1rem; background: #fff; }
+.lese-grid.smal div { padding: 6px; font-size: 1.8rem; }
+.skrive-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px 40px; width: 100%; margin-bottom: 25px; }
+.lines-container { width: 100%; max-width: 220px; margin: -20px auto 2px auto; display: inline-block; }
+.l { border-bottom: 1px solid #ccc; height: 26px; width: 100%; }
+.l.thick { border-bottom: 3px solid #333; }
+.setning-linje { display: flex; align-items: flex-end; justify-content: space-between; font-size: 1.6rem; margin-bottom: 18px; line-height: 1.3; }
+.setning-tekst { flex-grow: 1; display: flex; align-items: flex-end; flex-wrap: wrap; white-space: pre-wrap; }
+.setning-tekst span.linje-blank + font { white-space: pre-wrap; }
+.linje-blank { display: inline-block; width: 180px; border-bottom: 2px solid #000; margin: 0 10px; height: 10px; vertical-align: middle; margin-bottom: 4px; white-space: nowrap; }
+.fasit-ord { width: 120px; text-align: right; font-weight: normal; }
 
-.main-content { 
-            flex-grow: 1; overflow-y: auto; display: flex; 
-            flex-direction: column; align-items: center; padding: 40px 20px; 
-            border: none; /* <-- Sørg for at det står none her, eller slett linjen helt */
-        }
-        
-#placeholder-image {
-            background: transparent !important;
-            border: none !important;
-        }
+/* ==========================================================================
+   8. MODAL-STYLING (MANUELT ORDVALG)
+   ========================================================================== */
+.modal-skall { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
+.modal-innhold { background-color: #fff; padding: 20px; border-radius: 8px; width: 85%; max-width: 900px; height: 80vh; display: flex; flex-direction: column; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+.modal-hode { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
+.modal-lukk { font-size: 28px; font-weight: bold; cursor: pointer; color: #718096; }
+.modal-lukk:hover { color: #000; }
+.modal-body { display: flex; flex: 1; overflow: hidden; margin-top: 15px; gap: 20px; }
+.modal-venstre { width: 30%; border-right: 2px solid #edf2f7; padding-right: 15px; display: flex; flex-direction: column; }
+.modal-venstre ul { list-style: none; padding: 0; margin-top: 10px; overflow-y: auto; flex: 1; }
+.modal-venstre li { background: #edf2f7; padding: 10px; margin-bottom: 8px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+.modal-fjern-btn { background: #e53e3e; color: white; border: none; border-radius: 3px; padding: 2px 8px; cursor: pointer; }
+.modal-hoyre { width: 70%; display: flex; flex-direction: column; }
+#søkOrdInput { width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 4px; margin-bottom: 15px; font-size: 1rem; }
+.ord-velger-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; overflow-y: auto; flex: 1; padding-bottom: 10px; }
+.ord-knapp { background: #f7fafc; border: 1px solid #cbd5e0; border-radius: 4px; padding: 12px; text-align: center; cursor: pointer; font-size: 1.1rem; font-weight: 500; transition: all 0.2s; }
+.ord-knapp:hover { background: #e2e8f0; border-color: #4a5568; }
+.ord-knapp.valgt { background: #48bb78; color: white; border-color: #38a169; }
+.ord-knapp.deaktivert { opacity: 0.5; cursor: not-allowed; }
+.modal-bunn { border-top: 1px solid #e2e8f0; padding-top: 15px; display: flex; justify-content: flex-end; gap: 10px; }
+.btn-danger { background-color: #e53e3e; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+.btn-danger:hover { background-color: #c53030; }
 
-        #capture-area {
-            background: transparent !important; /* Gjør bakgrunnen usynlig */
-            border: none !important;             /* Fjerner eventuelle stiplede rammer */
-            box-shadow: none !important;         /* Fjerner skygganter */
-            width: 210mm; 
-            min-height: 296mm; 
-            padding: 1.5cm;
-            box-sizing: border-box;
-            display: none;                       /* Skjuler alt ved oppstart */
-        }
+/* ==========================================================================
+   8. TEMA-STILER (RAMMER & FARGER FOR HVERT ENKELT TEMA)
+   ========================================================================== */
+/* --- DE FIRE ORIGINALE TEMAENE --- */
+.tema-standard { background-color: #ffffff; border: 4px solid #2b6cb0; }
+.tema-standard #main-title { color: #2b6cb0; }
+.tema-standard .lese-grid div { background: #f7fafc; border: 2px solid #cbd5e0; color: #2d3748; }
+.tema-standard .lines-container .l.thick { border-color: #2b6cb0 !important; }
 
-        /* --- TEMA STYLING FOR BINGOBRETT --- */
-/* --- ALLE TEMASTILER (GAMLE + NYE) --- */
-        .bingo-brett { 
-            width: 100%; max-width: 700px; margin: 0 auto 60px auto; text-align: center; padding: 30px; box-sizing: border-box; border-radius: 20px; position: relative; background-color: #fff; border: 4px solid #333; transition: all 0.3s ease;
-        }
+.tema-skog { background-color: #f0fff4; border: 5px solid #2f855a; }
+.tema-skog #main-title { color: #2f855a; }
+.tema-skog .lese-grid div { background: #ffffff; border: 2px solid #9ae6b4; color: #22543d; border-radius: 8px; }
+.tema-skog .lines-container .l.thick { border-color: #2f855a !important; }
 
-        /* HØST */
-        .theme-host { background-color: #fffaf0; border: 6px double #d35400; }
-        .theme-host::before { content: "🍁 🍂 🍄 🍁"; position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-size: 1.5rem; letter-spacing: 10px; }
-        .theme-host .bingo-grid { border-color: #e67e22; background-color: #e67e22; }
+.tema-sol { background-color: #fffaf0; border: 5px solid #dd6b20; }
+.tema-sol #main-title { color: #dd6b20; }
+.tema-sol .lese-grid div { background: #ffffff; border: 2px solid #fbd38d; color: #7b341e; border-radius: 4px; }
+.tema-sol .lines-container .l.thick { border-color: #dd6b20 !important; }
 
-        /* VINTER */
-        .theme-vinter { background-color: #f4f9ff; border: 4px dashed #3498db; }
-        .theme-vinter::before { content: "❄️ ☃️ 🎿 ❄️"; position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-size: 1.5rem; letter-spacing: 10px; }
-        .theme-vinter .bingo-grid { border-color: #2980b9; background-color: #2980b9; }
+.tema-minimal { background-color: #ffffff; border: 2px solid #ffffff; }
+.tema-minimal #main-title { color: #000000; }
+.tema-minimal .lese-grid div { background: #ffffff; border: 2px solid #000000; color: #000000; border-radius: 4px; }
+.tema-minimal .lines-container .l.thick { border-color: #000000 !important; }
 
-        /* VÅR / SOMMER */
-        .theme-var { background-color: #fafffa; border: 5px solid #2ecc71; }
-        .theme-var::before { content: "🌸 🦋 ☀️ 🐞"; position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-size: 1.5rem; letter-spacing: 10px; }
-        .theme-var .bingo-grid { border-color: #27ae60; background-color: #27ae60; }
+/* --- DE NYERE BILDETEMAENE --- */
+.theme-host { background-color: #fffaf0; border: 6px double #d35400; }
+.theme-host #main-title { color: #d35400; }
+.theme-host .lese-grid div { background: #ffffff; border: 2px solid #e67e22; }
+.theme-host .lines-container .l.thick { border-color: #d35400 !important; }
 
-        /* VERDENSROMMET */
-        .theme-rommet { background-color: #f9f9fc; border: 5px solid #9b59b6; }
-        .theme-rommet::before { content: "🚀 🪐 ⭐️ 🛸"; position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-size: 1.5rem; letter-spacing: 10px; }
-        .theme-rommet .bingo-grid { border-color: #8e44ad; background-color: #8e44ad; }
+.theme-vinter { background-color: #f4f9ff; border: 4px dashed #3498db; }
+.theme-vinter #main-title { color: #2980b9; }
+.theme-vinter .lese-grid div { background: #ffffff; border: 2px solid #3498db; }
+.theme-vinter .lines-container .l.thick { border-color: #2980b9 !important; }
 
-        /* FEST / BURSDAG */
-        .theme-fest { background-color: #fff9fe; border: 5px dotted #e91e63; }
-        .theme-fest::before { content: "🎈 🎉 🍰 🥳"; position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-size: 1.5rem; letter-spacing: 10px; }
-        .theme-fest .bingo-grid { border-color: #ff4081; background-color: #ff4081; }
+.theme-sommer { background-color: #fffdf0; border: 5px solid #f1c40f; }
+.theme-sommer #main-title { color: #f39c12; }
+.theme-sommer .lese-grid div { background: #ffffff; border: 2px solid #f1c40f; }
+.theme-sommer .lines-container .l.thick { border-color: #f39c12 !important; }
 
-        /* 🎤 EUROVISION / ESC-TEMA (NY) */
-        .theme-esc { background-color: #fff9ff; border: 5px solid #ff007f; box-shadow: inset 0 0 15px rgba(233, 30, 99, 0.1); }
-        .theme-esc::before { content: "🎤 🌟 🇪🇺 🎶"; position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-size: 1.5rem; letter-spacing: 10px; }
-        .theme-esc .bingo-grid { border-color: #673ab7; background-color: #673ab7; }
+.theme-rommet { background-color: #f9f9fc; border: 5px solid #9b59b6; }
+.theme-rommet #main-title { color: #8e44ad; }
+.theme-rommet .lese-grid div { background: #ffffff; border: 2px solid #9b59b6; }
+.theme-rommet .lines-container .l.thick { border-color: #8e44ad !important; }
 
-        /* 🎃 HALLOWEEN / GRØSS (NY) */
-        .theme-halloween { background-color: #fcf6f0; border: 5px solid #333; }
-        .theme-halloween::before { content: "🎃 👻 🕸️ 🦇"; position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-size: 1.5rem; letter-spacing: 10px; }
-        .theme-halloween .bingo-grid { border-color: #d35400; background-color: #333; }
+.theme-fest { background-color: #fff9fe; border: 5px dotted #e91e63; }
+.theme-fest #main-title { color: #ff4081; }
+.theme-fest .lese-grid div { background: #ffffff; border: 2px solid #e91e63; }
+.theme-fest .lines-container .l.thick { border-color: #ff4081 !important; }
 
-        /* 🎄 JUL / VINTERKOS (NY) */
-        .theme-jul { background-color: #fffbfb; border: 5px dashed #c0392b; }
-        .theme-jul::before { content: "🎄 🎁 🎅 🌟"; position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-size: 1.5rem; letter-spacing: 10px; }
-        .theme-jul .bingo-grid { border-color: #27ae60; background-color: #c0392b; }
+.theme-racerbil { background-color: #fcfcfc; border: 6px double #e53e3e; } /* Dobbel rød ramme som racing-striper */
+.theme-racerbil #main-title { color: #e53e3e; }
+.theme-racerbil .lese-grid div { background: #ffffff; border: 2px solid #1a202c; color: #1a202c; } /* Asfaltsvarte rammer rundt boksene */
+.theme-racerbil .lines-container .l.thick { border-color: #e53e3e !important; }
 
-        /* 🦖 DINOSAURER (NY) */
-        .theme-dino { background-color: #fcfdf5; border: 5px solid #795548; }
-        .theme-dino::before { content: "🦖 🌋 🌴 🦕"; position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-size: 1.5rem; letter-spacing: 10px; }
-        .theme-dino .bingo-grid { border-color: #8d6e63; background-color: #5d4037; }
+.theme-kryp { background-color: #f4f7f4; border: 5px solid #2f855a; } /* Solid skogsgrønn ramme */
+.theme-kryp #main-title { color: #2f855a; }
+.theme-kryp .lese-grid div { background: #ffffff; border: 2px solid #8b5a2b; color: #2f855a; } /* Jordbrune rammer rundt boksene */
+.theme-kryp .lines-container .l.thick { border-color: #2f855a !important; }
 
-        /* 🏴‍☠️ SJØRØVERE (NY) */
-        .theme-pirat { background-color: #fbfbfc; border: 6px double #34495e; }
-        .theme-pirat::before { content: "🏴‍☠️ ⚓️ ⚔️ 🦜"; position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-size: 1.5rem; letter-spacing: 10px; }
-        .theme-pirat .bingo-grid { border-color: #2c3e50; background-color: #34495e; }
+.theme-sommerfugl { background-color: #fbf8ff; border: 5px dashed #b7791f; } /* Stiplet ramme som sommerfuglens flukt-sti */
+.theme-sommerfugl #main-title { color: #805ad5; } /* Lavendellilla tittel */
+.theme-sommerfugl .lese-grid div { background: #ffffff; border: 2px solid #3182ce; color: #4a5568; } /* Himmelblå rammer rundt boksene */
+.theme-sommerfugl .lines-container .l.thick { border-color: #805ad5 !important; }
 
-        /* ⚽️ SPORT / AKTIVITET (NY) */
-        .theme-sport { background-color: #f7fcf7; border: 5px solid #27ae60; }
-        .theme-sport::before { content: "⚽️ 🏆 🏃‍♂️ 🏅"; position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-size: 1.5rem; letter-spacing: 10px; }
-        .theme-sport .bingo-grid { border-color: #2ecc71; background-color: #27ae60; }
+.theme-halloween { background-color: #fcf6f0; border: 5px solid #333; }
+.theme-halloween #main-title { color: #d35400; }
+.theme-halloween .lese-grid div { background: #ffffff; border: 2px solid #333; }
+.theme-halloween .lines-container .l.thick { border-color: #d35400 !important; }
 
-        /* 🧬 MATTE / NATURFAG (NY) */
-        .theme-realfag { background-color: #fcfdfd; border: 4px solid #16a085; }
-        .theme-realfag::before { content: "🧬 📐 ➗ 🧪"; position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-size: 1.5rem; letter-spacing: 10px; }
-        .theme-realfag .bingo-grid { border-color: #2980b9; background-color: #16a085; }
+.theme-jul { background-color: #fffbfb; border: 5px dashed #c0392b; }
+.theme-jul #main-title { color: #c0392b; }
+.theme-jul .lese-grid div { background: #ffffff; border: 2px solid #27ae60; }
+.theme-jul .lines-container .l.thick { border-color: #c0392b !important; }
 
-        /* GRUNNLEGGENDE RUTENETT */
-        .bingo-grid {
-            display: grid; width: 100%; aspect-ratio: 1 / 1;
-            border: 5px solid #333; background-color: #333; gap: 5px; margin-top: 25px;
-        }
+.theme-dino { background-color: #fcfdf5; border: 5px solid #795548; }
+.theme-dino #main-title { color: #5d4037; }
+.theme-dino .lese-grid div { background: #ffffff; border: 2px solid #8d6e63; }
+.theme-dino .lines-container .l.thick { border-color: #5d4037 !important; }
 
-        .bingo-cell {
-            background-color: white; display: flex; justify-content: center; align-items: center;
-            padding: 15px; box-sizing: border-box; word-break: break-word; overflow: hidden;
-            text-align: center; line-height: 1.2; position: relative; color: #000;
-        }
+.theme-pirat { background-color: #fbfbfc; border: 6px double #34495e; }
+.theme-pirat #main-title { color: #2c3e50; }
+.theme-pirat .lese-grid div { background: #ffffff; border: 2px solid #34495e; }
+.theme-pirat .lines-container .l.thick { border-color: #2c3e50 !important; }
 
-        .free-space-image {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            max-width: 85%; max-height: 85%; object-fit: contain; display: block;
-        }
+.theme-sport { background-color: #f7fcf7; border: 5px solid #27ae60; }
+.theme-sport #main-title { color: #27ae60; }
+.theme-sport .lese-grid div { background: #ffffff; border: 2px solid #2ecc71; }
+.theme-sport .lines-container .l.thick { border-color: #27ae60 !important; }
 
-/* HAMBURGER MENY-KNAPP */
-.menu-container {
-    position: relative;
-    margin-bottom: 10px;
+/* ==========================================================================
+   TEMA BILDER-INTEGRASJON (Plassering og bildestier for alle 3 bildene)
+   ========================================================================== */
+.theme-image { position: absolute; width: 110px; height: 110px; background-size: contain; background-repeat: no-repeat; background-position: center; opacity: 0.95; z-index: 5; transition: all 0.3s ease; display: none; }
+
+#theme-img-1 { top: 15px; left: 20px; display: none; }       
+#theme-img-2 { top: 15px; right: 20px; display: none; }      
+#theme-img-3 { bottom: 15px; right: 20px; display: none; }    
+
+/* Aktiverer visning for alle bildebaserte temaer */
+.theme-dino #theme-img-1, .theme-dino #theme-img-2, .theme-dino #theme-img-3,
+.theme-fest #theme-img-1, .theme-fest #theme-img-2, .theme-fest #theme-img-3,
+.theme-racerbil #theme-img-1, .theme-racerbil #theme-img-2, .theme-racerbil #theme-img-3,
+.theme-kryp #theme-img-1, .theme-kryp #theme-img-2, .theme-kryp #theme-img-3,
+.theme-sommerfugl #theme-img-1, .theme-sommerfugl #theme-img-2, .theme-sommerfugl #theme-img-3,
+.theme-halloween #theme-img-1, .theme-halloween #theme-img-2, .theme-halloween #theme-img-3,
+.theme-host #theme-img-1, .theme-host #theme-img-2, .theme-host #theme-img-3,
+.theme-jul #theme-img-1, .theme-jul #theme-img-2, .theme-jul #theme-img-3,
+.theme-pirat #theme-img-1, .theme-pirat #theme-img-2, .theme-pirat #theme-img-3,
+.theme-sommer #theme-img-1, .theme-sommer #theme-img-2, .theme-sommer #theme-img-3,
+.theme-sport #theme-img-1, .theme-sport #theme-img-2, .theme-sport #theme-img-3,
+.theme-rommet #theme-img-1, .theme-rommet #theme-img-2, .theme-rommet #theme-img-3,
+.theme-vinter #theme-img-1, .theme-vinter #theme-img-2, .theme-vinter #theme-img-3 { display: block; }
+
+/* 1. DINOSAUR */
+.theme-dino #theme-img-1 { background-image: url('Bilder/dinosaur_01.png'); }
+.theme-dino #theme-img-2 { background-image: url('Bilder/dinosaur_02.png'); }
+.theme-dino #theme-img-3 { background-image: url('Bilder/dinosaur_03.png'); }
+
+/* 2. FEST */
+.theme-fest #theme-img-1 { background-image: url('Bilder/fest_01.png'); }
+.theme-fest #theme-img-2 { background-image: url('Bilder/fest_02.png'); }
+.theme-fest #theme-img-3 { background-image: url('Bilder/fest_03.png'); }
+
+/* 3. RACERBIL */
+.theme-racerbil #theme-img-1 { background-image: url('Bilder/racerbil_01.png'); }
+.theme-racerbil #theme-img-2 { background-image: url('Bilder/racerbil_02.png'); }
+.theme-racerbil #theme-img-3 { background-image: url('Bilder/racerbil_03.png'); }
+
+/* 4. SMÅKRYP */
+.theme-kryp #theme-img-1 { background-image: url('Bilder/kryp_01.png'); }
+.theme-kryp #theme-img-2 { background-image: url('Bilder/kryp_02.png'); }
+.theme-kryp #theme-img-3 { background-image: url('Bilder/kryp_03.png'); }
+
+/* 5. SOMMERFUGL */
+.theme-sommerfugl #theme-img-1 { background-image: url('Bilder/sommerfugl_01.png'); }
+.theme-sommerfugl #theme-img-2 { background-image: url('Bilder/sommerfugl_02.png'); }
+.theme-sommerfugl #theme-img-3 { background-image: url('Bilder/sommerfugl_03.png'); }
+
+/* 6. HALLOWEEN */
+.theme-halloween #theme-img-1 { background-image: url('Bilder/halloween_01.png'); }
+.theme-halloween #theme-img-2 { background-image: url('Bilder/halloween_02.png'); }
+.theme-halloween #theme-img-3 { background-image: url('Bilder/halloween_03.png'); }
+
+/* 7. HØST */
+.theme-host #theme-img-1 { background-image: url('Bilder/host_01.png'); }
+.theme-host #theme-img-2 { background-image: url('Bilder/host_02.png'); }
+.theme-host #theme-img-3 { background-image: url('Bilder/host_03.png'); }
+
+/* 8. JUL */
+.theme-jul #theme-img-1 { background-image: url('Bilder/jul_01.png'); }
+.theme-jul #theme-img-2 { background-image: url('Bilder/jul_02.png'); }
+.theme-jul #theme-img-3 { background-image: url('Bilder/jul_03.png'); }
+
+/* 9. SJØRØVER */
+.theme-pirat #theme-img-1 { background-image: url('Bilder/sjorover_01.png'); }
+.theme-pirat #theme-img-2 { background-image: url('Bilder/sjorover_02.png'); }
+.theme-pirat #theme-img-3 { background-image: url('Bilder/sjorover_03.png'); }
+
+/* 10. SOMMER */
+.theme-sommer #theme-img-1 { background-image: url('Bilder/sommer_01.png'); }
+.theme-sommer #theme-img-2 { background-image: url('Bilder/sommer_02.png'); }
+.theme-sommer #theme-img-3 { background-image: url('Bilder/sommer_03.png'); }
+
+/* 11. SPORT */
+.theme-sport #theme-img-1 { background-image: url('Bilder/sport_01.png'); }
+.theme-sport #theme-img-2 { background-image: url('Bilder/sport_02.png'); }
+.theme-sport #theme-img-3 { background-image: url('Bilder/sport_03.png'); }
+
+/* 12. VERDENSROMMET */
+.theme-rommet #theme-img-1 { background-image: url('Bilder/verdensrommet_01.png'); }
+.theme-rommet #theme-img-2 { background-image: url('Bilder/verdensrommet_02.png'); }
+.theme-rommet #theme-img-3 { background-image: url('Bilder/verdensrommet_03.png'); }
+
+/* 13. VINTER */
+.theme-vinter #theme-img-1 { background-image: url('Bilder/vinter_01.png'); }
+.theme-vinter #theme-img-2 { background-image: url('Bilder/vinter_02.png'); }
+.theme-vinter #theme-img-3 { background-image: url('Bilder/vinter_03.png'); }
+
+
+/* ==========================================================================
+   9. STRICT PRINT-STYLING (RENE A4 REGLER FOR UTSKRIFT)
+   ========================================================================== */
+
+@media print { 
+  @page { 
+    size: A4 portrait; 
+    margin: 0; 
+  } 
+  
+  html, body { 
+    width: 210mm; 
+    height: 297mm; 
+    background: white !important; 
+    overflow: visible !important; 
+  } 
+  
+  .sidebar { 
+    display: none !important; 
+  } 
+  
+  .main-content { 
+    padding: 0 !important; 
+    height: auto !important; 
+    width: 210mm !important; 
+    display: block !important; 
+    overflow: visible !important; 
+  } 
+  
+  /* Krymper hele arket med 4% under utskrift så rammene ikke kuttes */
+  .ark-skalering { 
+    display: block !important; 
+    width: 210mm !important; 
+    height: 297mm !important; 
+    transform: scale(0.96) !important; 
+    transform-origin: center center !important; 
+  } 
+  
+  #capture-area { 
+    box-shadow: none !important; 
+    padding: 12mm 18mm !important; 
+    width: 210mm !important; 
+    height: 297mm !important; 
+    margin: 0 auto !important; 
+    float: none !important; 
+    -webkit-print-color-adjust: exact !important; 
+    print-color-adjust: exact !important; 
+  } 
+  
+  .ord-tabell td, .linje-blank, .l.thick { 
+    border-color: #000 !important; 
+  } 
+  
+  .l { 
+    border-color: #ccc !important; 
+  } 
 }
-
-.hamburger {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    cursor: pointer;
-    width: 20px;
-    padding: 5px;
-}
-
-.hamburger span {
-    display: block;
-    width: 100%;
-    height: 2px;
-    background-color: white;
-    border-radius: 1px;
-    transition: 0.3s;
-}
-
-/* SELVE MENYEN SOM KOMMER FREM */
-.dropdown-menu {
-    display: none;
-    position: absolute;
-    top: 25px;
-    left: 0;
-    background-color: #2c3e50;
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 6px;
-    width: 200px;
-    z-index: 100;
-    box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
-}
-
-.dropdown-menu.show {
-    display: block;
-}
-
-.menu-icon {
-    width: 20px;          /* Størrelsen på bildet */
-    height: 20px;
-    margin-right: 10px;   /* Avstand fra bilde til tekst */
-    vertical-align: middle; /* Sentrerer bildet i forhold til teksten */
-    object-fit: contain;  /* Sørger for at bildet ikke blir strukket */
-    border-radius: 3px;   /* Valgfritt: runder av hjørnene på bildene litt */
-}
-.dropdown-menu a {
-    display: block;
-    color: white;
-    padding: 12px 15px;
-    text-decoration: none;
-    font-size: 0.9rem;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-
-.dropdown-menu a:hover {
-    background-color: #34495e;
-}
-
-.menu-item-disabled {
-    opacity: 0.4;            /* Gjør alt 60% gjennomsiktig */
-    filter: grayscale(100%); /* Gjør bildet helt grått */
-    pointer-events: none;    /* Gjør at man ikke kan klikke på lenken */
-    cursor: default;         /* Viser vanlig pil i stedet for pekefinger */
-}
-
-
-/* --- OPPDATERTE PRINT REGLER FOR SIKKER MARGIN --- */
-        @media print {
-            @page { 
-                /* Legger inn en trygg standardmargin (ca. 1 cm) som alle skrivere takler */
-                margin: 10mm !important; 
-                size: A4; 
-            }
-            body { 
-                background: white; 
-                overflow: visible !important; 
-                margin: 0 !important; 
-                padding: 0 !important; 
-                -webkit-print-color-adjust: exact; 
-                print-color-adjust: exact; 
-            }
-            .sidebar { display: none !important; }
-            .main-content { padding: 0 !important; margin: 0 !important; overflow: visible !important; display: block !important; }
-            
-            #capture-area { 
-                box-shadow: none !important; 
-                margin: 0 !important; 
-                width: 100% !important; 
-                padding: 0 !important; 
-                border: none !important; 
-                box-sizing: border-box !important; 
-            }
-            
-            .bingo-brett {
-                page-break-inside: avoid !important;
-                page-break-before: always !important; 
-                width: 100% !important;
-                /* Bruker min-height og trekker fra marginene så rammen holder seg trygt på én side */
-                min-height: calc(296mm - 20mm) !important; 
-                box-sizing: border-box !important;
-                margin: 0 auto !important;
-                /* Justerer luften innvendig slik at overskriften og emojier ikke blir kuttet */
-                padding-top: 2cm !important; 
-                padding-left: 1cm !important;
-                padding-right: 1cm !important;
-                border-radius: 0px !important; 
-            }
-            
-            .bingo-brett:first-child {
-                page-break-before: avoid !important;
-            }
-        }
-    </style>
+</style>   
 </head>
 <body>
 
 <div class="sidebar">
     <div class="sidebar-header" style="display: flex; align-items: center; margin-bottom: 20px;">
-        
         <div class="menu-container" style="margin-bottom: 0; margin-right: 15px;">
-            <div class="hamburger" onclick="toggleMenu()">
+            <div class="hamburger" id="hamburgerBtn">
                 <span></span>
                 <span></span>
                 <span></span>
             </div>
-    <div id="myDropdown" class="dropdown-menu">
-
-                <a href="https://77tor.github.io/bingo/" class="menu-item-disabled">
+            <div id="myDropdown" class="dropdown-menu">
+                <a href="https://77tor.github.io/bingo/" target="_self">
                     <img src="bingo_02.png" class="menu-icon" alt="Bingo"> Bingo
                 </a>
                 <a href="https://77tor.github.io/finn_ordet/" target="_self">
@@ -351,7 +404,7 @@
                 <a href="https://77tor.github.io/gitter/" target="_self">
                     <img src="gitter_02.png" class="menu-icon" alt="Gitter-ord"> Gitter-ord
                 </a>
-                <a href="https://77tor.github.io/les_og_skriv/" target="_self">
+                <a href="https://77tor.github.io/les_og_skriv/" class="menu-item-disabled">
                     <img src="les_skriv.png" class="menu-icon" alt="Les og skriv"> Les og skriv
                 </a>
                 <a href="https://77tor.github.io/ord-sok/" target="_self"> 
@@ -367,63 +420,46 @@
                     <img src="stavelser_01.png" class="menu-icon" alt="Stavelser"> Stavelser
                 </a>
 
-</div>
+            </div>
         </div>
-
-        <h2 style="margin: 0; flex-grow: 1; text-align: center;">BINGO-GENERATOR</h2>
+        <h2 style="margin: 0; flex-grow: 1; text-align: center;">Les og skriv</h2>
     </div>
 
-        <textarea id="text-input" placeholder="Skriv ord/setninger (skilles med linjeskift eller komma)...&#10;Katt, Hund, Bil, Hus, Sol, Sykkel, Skole..."></textarea>
-
+    <div class="sidebar-controls">
         <div class="control-item">
-            <span>Egen overskrift:</span>
-            <input type="text" id="custom-title" placeholder="BINGO" oninput="updateLivePreview()" style="width: 120px;">
+            <span>Hovedområde</span>
+<select id="bolkVelger">
+    <option value="manuell_alle"> Velg blant alle ord</option>
+    <option value="bolk1">1 – Diftonger</option>
+    <option value="bolk2">2 – Dobbel konsonant</option>
+    <option value="bolk3">3 – Å-lyd</option>
+    <option value="bolk4">4 – Konsonantlyder</option>
+    <option value="bolk5">5 – Blandede lyder og forvekslinger</option>
+    <option value="bolk6">6 – Stumme bokstaver</option>
+    <option value="bolk7">7 – Par-ord</option>
+    <option value="bolk8">8 – Småord og kort o-lyd</option>
+    <option value="bolk9">9 – Lydrette ord</option>
+    <option value="bolk10">10 – De 96 mest brukte ord</option>
+    <option value="manuell_kategori">Velg ord selv</option>
+</select>
         </div>
 
         <div class="control-item">
-            <span>Størrelse på brett:</span>
-            <select id="select-grid" onchange="toggleFreeSpaceOption(); updateLivePreview()">
-                <option value="3">3 x 3</option>
-                <option value="4" selected>4 x 4</option>
-                <option value="5">5 x 5</option>
-            </select>
-        </div>
-
-        <div class="control-item">
-            <span>Antall unike brett:</span>
-            <select id="select-brett-antall" onchange="generateBingo(true)">
-                <option value="1">1 brett</option>
-                <option value="5">5 brett</option>
-                <option value="10" selected>10 brett</option>
-                <option value="15">15 brett</option>
-                <option value="20">20 brett</option>
-                <option value="25">25 brett</option>
-                <option value="30">30 brett</option>
-            </select>
+            <span>Velg liste</span>
+            <select id="kategoriVelger">
+                </select>
         </div>
 
 <div class="control-item">
-            <span>Tema / Design:</span>
-            <select id="select-theme" onchange="updateLivePreview()">
-                <option value="standard">Standard (Klassisk)</option>
-                <option value="host">🍁 Høst</option>
-                <option value="vinter">❄️ Vinter</option>
-                <option value="var">🌸 Vår / Sommer</option>
-                <option value="rommet">🚀 Verdensrommet</option>
-                <option value="fest">🎈 Fest / Bursdag</option>
-                <option value="esc">🎤 Eurovision / ESC</option>
-                <option value="halloween">🎃 Halloween</option>
-                <option value="jul">🎄 Jul</option>
-                <option value="dino">🦖 Dinosaurer</option>
-                <option value="pirat">🏴‍☠️ Sjørøvere</option>
-                <option value="sport">⚽️ Sport / Gym</option>
-                <option value="realfag">🧬 Realfag</option>
-            </select>
-        </div>
-
+    <label for="antallOrdVelger">Antall ord:</label>
+    <select id="antallOrdVelger" style="width: 100px;">
+        <option value="3" selected>3 ord</option>
+        <option value="6">6 ord</option>
+    </select>
+</div>
         <div class="control-item">
-            <span>Font på brett:</span>
-            <select id="font-family" onchange="updateLivePreview()">
+            <span>Font</span>
+            <select id="font-family">
                 <option value="'Trykkskrift', sans-serif">Trykkskrift</option>
                 <option value="'Skogstavskrift', cursive">Skogstavskrift</option>
                 <option value="'Andika', sans-serif">Andika</option>
@@ -432,287 +468,149 @@
                 <option value="Arial, sans-serif">Arial</option>
             </select>
         </div>
-
-        <div class="control-item">
-            <span>Skriftstørrelse (px):</span>
-            <input type="number" id="font-size" value="18" min="10" max="60" onchange="updateLivePreview()">
-        </div>
-
-        <div class="control-item">
-            <span>STORE BOKSTAVER</span>
-            <label class="switch">
-                <input type="checkbox" id="toggle-upper" onchange="updateLivePreview()">
-                <div class="slider"></div>
-            </label>
-        </div>
-
-        <div class="control-item">
-            <span>Fet skrift</span>
-            <label class="switch">
-                <input type="checkbox" id="toggle-bold" onchange="updateLivePreview()">
-                <div class="slider"></div>
-            </label>
-        </div>
-
-        <div class="control-item" id="free-space-label" style="display: none;">
-            <span>Gratis midtfelt</span>
-            <label class="switch">
-                <input type="checkbox" id="toggle-free-space" checked onchange="toggleImageUploadInput()">
-                <div class="slider"></div>
-            </label>
-        </div>
-
-        <div class="control-group" id="image-upload-group" style="display: none;">
-            <div class="control-item">
-                <span>Bilde i midtfelt:</span>
-                <div class="file-input-wrapper">
-                    <input type="file" id="free-space-image-input" accept="image/*" onchange="handleImageUpload()">
-                </div>
-            </div>
-        </div>
-
-
-<div class="btn-group" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: stretch;">
-    <button class="action-btn btn-generate" onclick="generateBingo(true)" style="flex: 2; white-space: nowrap; background-color: #27ae60; margin-bottom: 0;">Lag bingobrett</button>
-    <button class="action-btn" onclick="resetApp()" style="flex: 1; white-space: nowrap; background-color: #ff7675; color: white; margin-bottom: 0;">Nullstill</button>
-    <button class="action-btn" style="flex: 1; background-color: #2980b9; color: white; margin-bottom: 0;" onclick="window.print()">Skriv ut</button>
+<div class="control-item">
+    <label for="tekstStorrelseVelger">Skriftstørrelse:</label>
+    <select id="tekstStorrelseVelger" style="width: 100px;">
+        <option value="liten">Liten</option>
+        <option value="normal" selected>Normal</option>
+        <option value="stor">Stor</option>
+    </select>
 </div>
-</div> 
-<div class="main-content">
-        <div id="placeholder-image" style="display: flex; justify-content: center; align-items: center; width: 100%; height: 80vh; background: transparent !important;">
-            <img src="bingo_03.png" alt="Velkomstbilde" style="max-width: 400px; opacity: 0.15; filter: grayscale(100%); background: transparent !important; box-shadow: none !important;">
-        </div>
 
-    <div id="capture-area">
-        <div id="output-container"></div>
+<div class="control-item" style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+    <!-- Bryter 1: Store bokstaver -->
+    <div style="display: flex; align-items: center; gap: 6px;">
+        <span style="font-size: 0.85rem;">Store bokst.</span>
+        <label class="switch">
+            <input type="checkbox" id="toggle-case">
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <!-- Bryter 2: Ulik rekkefølge -->
+    <div style="display: flex; align-items: center; gap: 6px;">
+        <span style="font-size: 0.85rem;">Ulik rekkef.</span>
+        <label class="switch">
+            <input type="checkbox" id="toggle-shuffle-sentences">
+            <span class="slider"></span>
+        </label>
     </div>
 </div>
 
-    <script>
-        let lagredeBrett = [];
-        let base64Bilde = "";
 
-        function toggleFreeSpaceOption() {
-            const gridSize = parseInt(document.getElementById('select-grid').value);
-            const label = document.getElementById('free-space-label');
+<div class="menu-item overskrift-rad">
+    <label for="overskriftInput">Egen overskrift:</label>
+    <input type="text" id="overskriftInput" placeholder="Automatisk...">
+</div>
+    </div>
+
+<div class="control-item">
+    <span>Visuelt tema</span>
+    <select id="temaVelger">
+        <option value="tema-standard">Standard (Blå/Grå)</option>
+        <option value="tema-skog">Skog og Natur (Grønn)</option>
+        <option value="tema-sol">Solskinn (Gul/Oransje)</option>
+        <option value="tema-minimal">Minimalistisk (Svart/Hvit)</option>
+        <option value="theme-host">🍂 Høst</option>
+        <option value="theme-vinter">❄️ Vinter</option>
+        <option value="theme-sommer">🌸 Sommer</option>
+        <option value="theme-rommet">🚀 Verdensrommet</option>
+        <option value="theme-fest">🎈 Fest / Bursdag</option>
+        <option value="theme-racerbil">🏎️ Racerbil</option>
+        <option value="theme-kryp">🐞 Småkryp</option>
+        <option value="theme-sommerfugl">🦋 Sommerfugler</option>
+        <option value="theme-halloween">🎃 Halloween</option>
+        <option value="theme-jul">🎄 Jul</option>
+        <option value="theme-dino">🦖 Dinosaurer</option>
+        <option value="theme-pirat">🏴‍☠️ Sjørøvere</option>
+        <option value="theme-sport">⚽️ Sport / Aktivitet</option>
+    </select>
+</div>
+
+<div style="margin-top: 15px;">
+        <div class="main-row" style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <button class="action-btn btn-generate" id="btnLagOppgave" style="flex: 1; white-space: nowrap;">LAG OPPGAVE</button>
+            <button class="action-btn btn-download" id="btnLastNed" style="display: none;"></button>
+        </div>
+        <div class="btn-row" style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <button class="action-btn btn-print" id="btnSkrivUt" style="flex: 2;">SKRIV UT</button>
+            <button class="action-btn btn-reset" id="btnNullstill" style="flex: 1; white-space: nowrap;">NULLSTILL</button>
+        </div>
+    </div>
+</div>
+
+<div class="main-content">
+    <div class="ark-skalering">
+
+        <div id="placeholder-image" style="display: flex; justify-content: center; align-items: center; width: 100%; height: 100%;">
+            <img src="les_skriv.png" alt="Velkomstbilde" style="max-width: 700px; width: 90%; opacity: 0.3; filter: grayscale(100%);">
+        </div> 
+
+<div id="capture-area" style="display: none;">
+<div id="theme-img-1" class="theme-image"></div>
+    <div id="theme-img-2" class="theme-image"></div>
+    <div id="theme-img-3" class="theme-image"></div>
+
+    <h1 id="main-title">Oppgaver til ordtrening</h1>
+    
+    <div class="instruksjon">Les ordene:</div>
+    <div id="leseOrdBeholder"></div>
+
+    <div class="instruksjon">Skriv ordene:</div>
+    <div id="skriveLinjerBeholder"></div>
+
+    <div class="instruksjon">Les og skriv ordene på rett plass:</div>
+    <div id="setningerBeholder"></div>
+</div>
+
+    </div>
+</div>
+<div id="ordVelgerModal" class="modal-skall" style="display: none; align-items: flex-start !important; padding-top: 1vh;">
+    
+    <div class="modal-innhold" style="height: 94vh !important; max-height: 94vh; display: flex; flex-direction: column; margin-top: 0; padding-top: 5 !important; padding-bottom: 0 !important;">
+        
+        <div class="modal-hode" style="padding: 4px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0;">
+            <h2 style="margin: 0; font-size: 1.2rem;">Velg ord til oppgaven</h2>
+            <span class="modal-lukk" id="btnAvbrytKryss" style="cursor: pointer; font-size: 1.5rem; line-height: 1;">&times;</span>
+        </div>
+        
+        <div class="modal-filter-seksjon" style="display: flex; gap: 15px; align-items: flex-end; background: #f7fafc; padding: 6px 20px; border-bottom: 1px solid #e2e8f0; box-sizing: border-box;">
+            <div style="flex: 1;">
+                <label for="modalBolkVelger" style="display:block; font-size: 0.75rem; margin-bottom:2px; font-weight:bold; color: #4a5568;">Hovedområde:</label>
+                <select id="modalBolkVelger" style="width:100%; padding:5px; border-radius:4px; border:1px solid #cbd5e0; background: white; font-size: 0.9rem; box-sizing: border-box;"></select>
+            </div>
+
+            <div style="flex: 1;">
+                <label for="modalKategoriVelger" style="display:block; font-size: 0.75rem; margin-bottom:2px; font-weight:bold; color: #4a5568;">Velg liste:</label>
+                <select id="modalKategoriVelger" style="width:100%; padding:5px; border-radius:4px; border:1px solid #cbd5e0; background: white; font-size: 0.9rem; box-sizing: border-box;"></select>
+            </div>
+        </div>
+
+        <div class="modal-body" style="display: flex; gap: 20px; padding: 10px 20px; flex: 1; min-height: 0;">
             
-            if (gridSize % 2 !== 0) {
-                label.style.display = "flex";
-            } else {
-                label.style.display = "none";
-            }
-            toggleImageUploadInput();
-        }
-
-        function toggleImageUploadInput() {
-            const gridSize = parseInt(document.getElementById('select-grid').value);
-            const medGratisFelt = document.getElementById('toggle-free-space').checked;
-            const uploadGroup = document.getElementById('image-upload-group');
-
-            if (gridSize % 2 !== 0 && medGratisFelt) {
-                uploadGroup.style.display = "block";
-            } else {
-                uploadGroup.style.display = "none";
-            }
-            updateLivePreview();
-        }
-
-        function updateLivePreview() {
-            if (lagredeBrett.length > 0) {
-                const gridSize = parseInt(document.getElementById('select-grid').value);
-                const ruterTotalt = gridSize * gridSize;
+            <div class="modal-venstre" style="flex: 1; display: flex; flex-direction: column; height: 100%;">
+                <h3 style="margin-top: 0; margin-bottom: 5px; font-size: 1rem;">Valgte ord (<span id="tellerValgte">0</span>/<span id="tellerMaks">3</span>)</h3>
                 
-                if (lagredeBrett[0] && lagredeBrett[0].length !== ruterTotalt) {
-                    generateBingo(true);
-                } else {
-                    generateBingo(false);
-                }
-            }
-        }
-
-        function handleImageUpload() {
-            const fileInput = document.getElementById('free-space-image-input');
-            const file = fileInput.files[0];
+                <div id="boksGruppe1" class="ord-gruppe-boks" style="padding: 8px; margin-bottom: 0; flex: 1; overflow-y: auto; box-sizing: border-box;">
+                    <h4 style="margin-top: 0; margin-bottom: 5px; font-size: 0.85rem; color: #718096;">Ord 1–6:</h4>
+                    <ul id="valgteOrdListe1" style="list-style: none; padding: 0; margin: 0;"></ul>
+                    <ul id="valgteOrdListe2" style="list-style: none; padding: 0; margin: 0;"></ul>
+                </div>
+            </div>
             
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    base64Bilde = e.target.result;
-                    updateLivePreview();
-                };
-                reader.readAsDataURL(file);
-            }
-        }
+            <div class="modal-hoyre" style="flex: 1.4; display: flex; flex-direction: column; height: 100%;">
+                <input type="text" id="søkOrdInput" placeholder="Søk etter ord i denne kategorien..." style="width: 100%; padding: 6px; margin-bottom: 8px; box-sizing: border-box; font-size: 0.9rem;">
+                <div id="alleOrdContainer" class="ord-velger-grid" style="flex: 1; overflow-y: auto; padding-right: 5px;"></div>
+            </div>
+        </div>
+        
+        <div class="modal-bunn" style="padding: 6px 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 0; background: white;">
+            <button id="btnGenererValgte" class="btn-primary" disabled style="padding: 6px 12px; font-size: 0.9rem;">Generer side</button>
+            <button id="btnNullstillValgte" class="btn-danger" style="padding: 6px 12px; font-size: 0.9rem;">Nullstill valg</button>
+            <button id="btnAvbryt" class="btn-secondary" style="padding: 6px 12px; font-size: 0.9rem;">Avbryt</button>
+        </div>
+    </div>
+</div>
 
-function generateBingo(isManualClick = false) {
-            const input = document.getElementById('text-input').value.trim();
-            
-            // --- NY SJEKK: Stopper genereringen hvis feltet er tomt ---
-            if (input === "") {
-                alert("Vennligst skriv inn noen ord eller setninger i tekstfeltet først!");
-                return; // Avbryter funksjonen helt
-            }
-            // ---------------------------------------------------------
-            const placeholder = document.getElementById('placeholder-image');
-            const area = document.getElementById('capture-area');
-            const outputContainer = document.getElementById('output-container');
-
-            const gridSize = parseInt(document.getElementById('select-grid').value);
-            const antallBrett = parseInt(document.getElementById('select-brett-antall').value);
-            const temaKlasse = document.getElementById('select-theme').value;
-            const ruterTotalt = gridSize * gridSize;
-
-            let ordListe = [];
-            if (input !== "") {
-                ordListe = input.split(/[\n,]+/).map(w => w.trim()).filter(w => w.length > 0);
-            }
-
-            // SIKKER LOGIKK FOR Å UNNGÅ AT ORD FORSVINNER PÅ GRUNN AV GRATIS RUTE
-            const medGratisFelt = document.getElementById('toggle-free-space').checked;
-            const erOddetall = gridSize % 2 !== 0;
-            
-            // Hvis vi skal ha gratis midtfelt, trenger vi ett ord mindre enn totalt antall ruter
-            const antallOrdSomTrengs = (medGratisFelt && erOddetall) ? (ruterTotalt - 1) : ruterTotalt;
-
-            if (ordListe.length === 0) {
-                ordListe = ["Ape", "Bjørn", "Cobra", "Dino", "Elefant", "Frosk", "Gaupe", "Hest", "Iis", "Jerv", "Katt", "Løve", "Mus", "Nesehorn", "Oter", "Panda", "Ulv", "Rev", "Sjiraff", "Tiger", "Ugle", "Vaskebjørn", "Sebra", "Yak", "Ørn"];
-            }
-
-            // Fyller på med fyll-ord HVIS læreren har skrevet inn for få ord i boksen
-            const fyllOrd = (temaKlasse === "esc") ? "ESC 🎤" : "BINGO! 🎉";
-            
-            while (ordListe.length < antallOrdSomTrengs) {
-                ordListe.push(fyllOrd);
-            }
-
-            // Kutter listen nøyaktig der den skal for å gi plass til gratis-ruta
-            let listeTilStokking = ordListe.slice(0, antallOrdSomTrengs);
-
-            placeholder.style.display = "none";
-            area.style.display = "block";
-
-            if (isManualClick) {
-                lagredeBrett = [];
-                for (let b = 0; b < antallBrett; b++) {
-                    let stokketListe = [...listeTilStokking];
-                    
-                    for (let i = stokketListe.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        [stokketListe[i], stokketListe[j]] = [stokketListe[j], stokketListe[i]];
-                    }
-                    
-                    lagredeBrett.push(stokketListe);
-                }
-            }
-
-let html = "";
-            const isUpper = document.getElementById('toggle-upper').checked;
-            
-            // Henter den egne overskriften, eller bruker "BINGO" som standard hvis feltet er tomt
-            let overskrift = document.getElementById('custom-title').value.trim();
-            if (overskrift === "") {
-                overskrift = "BINGO";
-            } else if (isUpper) {
-                overskrift = overskrift.toUpperCase();
-            }
-
-            const midtersteIndeks = erOddetall ? (ruterTotalt - 1) / 2 : -1;
-
-            lagredeBrett.forEach((brettOrd, brettIndeks) => {
-                html += `
-                    <div class="bingo-brett theme-${temaKlasse}">
-                        <h1 style="margin-top: 15px; margin-bottom: 5px; font-family: sans-serif; letter-spacing: 8px; font-size: 3rem;">${overskrift}</h1>
-                        <p style="margin-bottom: 15px; font-style: italic; font-size: 0.9rem; color: #7f8c8d; font-family: sans-serif;">Unikt brett nr. ${brettIndeks + 1}</p>
-                        <div class="bingo-grid" style="grid-template-columns: repeat(${gridSize}, 1fr);">
-                `;
-
-                // UTTEGNING AV RUTENE
-                let ordTeller = 0;
-                for (let celleIndeks = 0; celleIndeks < ruterTotalt; celleIndeks++) {
-                    let celleInnhold = "";
-
-                    if (medGratisFelt && celleIndeks === midtersteIndeks) {
-                        if (base64Bilde !== "") {
-                            celleInnhold = `<img src="${base64Bilde}" class="free-space-image" alt="Fri rute">`;
-                        } else {
-                            celleInnhold = isUpper ? "GRATIS" : "Gratis rute";
-                        }
-                    } else {
-                        let ord = brettOrd[ordTeller] || "";
-                        celleInnhold = isUpper ? ord.toUpperCase() : ord;
-                        ordTeller++;
-                    }
-
-                    if (celleInnhold === "") celleInnhold = "&nbsp;";
-
-                    html += `<div class="bingo-cell">${celleInnhold}</div>`;
-                }
-
-                html += `
-                        </div>
-                    </div>
-                `;
-            });
-
-            outputContainer.innerHTML = html;
-
-            const fontFamily = document.getElementById('font-family').value;
-            const fontSize = document.getElementById('font-size').value;
-            const isBold = document.getElementById('toggle-bold').checked;
-
-            outputContainer.style.fontSize = fontSize + "px";
-            outputContainer.style.fontWeight = isBold ? "bold" : "normal";
-            area.style.fontFamily = fontFamily;
-        }
-
-function toggleMenu() {
-    document.getElementById("myDropdown").classList.toggle("show");
-}
-
-// Lukker menyen hvis man klikker utenfor den
-window.addEventListener('click', function(event) {
-    if (!event.target.closest('.menu-container')) {
-        var dropdowns = document.getElementsByClassName("dropdown-menu");
-        for (var i = 0; i < dropdowns.length; i++) {
-            var openDropdown = dropdowns[i];
-            if (openDropdown.classList.contains('show')) {
-                openDropdown.classList.remove('show');
-            }
-        }
-    }
-});
-
-function resetApp() {
-            // --- NY SJEKK: Spør om brukeren er sikker før alt slettes ---
-            const bekreft = confirm("Er du sikker på at du vil nullstille? Alle innlagte ord og genererte brett vil bli slettet.");
-            if (!bekreft) {
-                return; // Avbryter funksjonen hvis de trykker "Avbryt"
-            }
-            // -----------------------------------------------------------
-
-            document.getElementById('text-input').value = "";
-            document.getElementById('custom-title').value = ""; // Tar med denne så overskriften også tømmes!
-            document.getElementById('free-space-image-input').value = "";
-            base64Bilde = "";
-            document.getElementById('toggle-upper').checked = false;
-            document.getElementById('toggle-bold').checked = false;
-            document.getElementById('toggle-free-space').checked = true;
-            document.getElementById('select-grid').value = "4";
-            document.getElementById('select-brett-antall').value = "10";
-            document.getElementById('select-theme').value = "standard";
-            document.getElementById('font-family').value = "'Trykkskrift', sans-serif";
-            document.getElementById('font-size').value = "18";
-            
-            // Viser velkomstbildet og skjuler hele utskriftsområdet (inkludert stiplede linjer)
-            document.getElementById('placeholder-image').style.display = "flex";
-            document.getElementById('capture-area').style.display = "none";
-            
-            document.getElementById('output-container').innerHTML = "";
-            lagredeBrett = [];
-            toggleFreeSpaceOption();
-        }
-
-        toggleFreeSpaceOption();
-    </script>
 </body>
 </html>
